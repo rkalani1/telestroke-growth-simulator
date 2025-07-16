@@ -7,8 +7,8 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
-    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.263.0/dist/umd/lucide-react.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -31,7 +31,7 @@
         // Lucide icons setup
         const LucideIcon = ({ name, ...props }) => {
             const Icon = lucide[name];
-            return <i {...props} dangerouslySetInnerHTML={{ __html: Icon }} />;
+            return <Icon {...props} />;
         };
 
         // Icons components
@@ -96,8 +96,8 @@
                         const newPartners = yearIdx === 0 ? 3 : lambdaNewPartners;
                         partners += newPartners;
 
-                        const meanPerPartner = meanConsultGrowth / Math.max(1, lambdaNewPartners);
-                        const sdPerPartner = sdConsultGrowth / Math.sqrt(Math.max(1, lambdaNewPartners));
+                        const meanPerPartner = meanConsultGrowth / Math.max(1, newPartners);
+                        const sdPerPartner = sdConsultGrowth / Math.sqrt(Math.max(1, newPartners));
                         let growth = 0;
                         for (let i = 0; i < newPartners; i++) {
                             growth += this.normalRandom(meanPerPartner, sdPerPartner);
