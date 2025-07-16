@@ -4,1281 +4,761 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telestroke Growth Projections</title>
-    <!-- React 17 (more stable for CDN) -->
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-    <!-- Babel Standalone -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Recharts -->
-    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            padding: 0;
+            box-sizing: border-box;
         }
-        /* Loading indicator */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 0;
+        }
+        .header p {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #15803d;
+        }
+        .btn-success:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            font-weight: 600;
+            color: #374151;
+            background: #f9fafb;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        .stat-box {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .stat-box.primary {
+            background: #dbeafe;
+        }
+        .stat-box.danger {
+            background: #fee2e2;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .stat-range {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        .chart-container {
+            position: relative;
+            margin-top: 1rem;
+        }
         .loading {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            font-size: 1.5rem;
-            color: #666;
+            padding: 2rem;
+            color: #6b7280;
         }
-        /* Icon styles */
-        .icon {
-            display: inline-block;
-            width: 1em;
-            height: 1em;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
+        .spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .parameter-section {
+            background: #f3f4f6;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .parameter-section.primary {
+            background: #e0f2fe;
+        }
+        .parameter-section.danger {
+            background: #fee2e2;
+        }
+        .parameter-group {
+            margin-bottom: 1rem;
+        }
+        .parameter-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+        .parameter-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .input-group input {
+            flex: 1;
+        }
+        .input-group span {
+            color: #6b7280;
+        }
+        svg {
+            overflow: visible;
+        }
+        @media (max-width: 768px) {
+            .grid-2, .grid-4, .parameters-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="root">
-        <div class="loading">Loading Telestroke Simulator...</div>
-    </div>
-    
-    <script type="text/babel">
-        // Wait for all scripts to load
-        window.addEventListener('load', () => {
-            const { useState, useEffect, useCallback, useMemo } = React;
-            const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart, ReferenceLine } = Recharts;
-            
-            // Simple SVG icons as components (replacing Lucide)
-            const Download = (props) => (
-                <svg className="icon" {...props}>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-            );
-
-            const Activity = (props) => (
-                <svg className="icon" {...props}>
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-            );
-
-            const TrendingUp = (props) => (
-                <svg className="icon" {...props}>
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                    <polyline points="17 6 23 6 23 12"></polyline>
-                </svg>
-            );
-
-            const Users = (props) => (
-                <svg className="icon" {...props}>
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-            );
-
-            const Sliders = (props) => (
-                <svg className="icon" {...props}>
-                    <line x1="4" y1="21" x2="4" y2="14"></line>
-                    <line x1="4" y1="10" x2="4" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12" y2="3"></line>
-                    <line x1="20" y1="21" x2="20" y2="16"></line>
-                    <line x1="20" y1="12" x2="20" y2="3"></line>
-                    <line x1="1" y1="14" x2="7" y2="14"></line>
-                    <line x1="9" y1="8" x2="15" y2="8"></line>
-                    <line x1="17" y1="16" x2="23" y2="16"></line>
-                </svg>
-            );
-
-            const BarChart2 = (props) => (
-                <svg className="icon" {...props}>
-                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-            );
-
-            const FileText = (props) => (
-                <svg className="icon" {...props}>
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-            );
-
-            const Calendar = (props) => (
-                <svg className="icon" {...props}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-            );
-
-            const Edit2 = (props) => (
-                <svg className="icon" {...props}>
-                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                </svg>
-            );
-
-            const Plus = (props) => (
-                <svg className="icon" {...props}>
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            );
-
-            const Trash2 = (props) => (
-                <svg className="icon" {...props}>
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-            );
-
-            const ChevronDown = (props) => (
-                <svg className="icon" {...props}>
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            );
-
-            const ChevronUp = (props) => (
-                <svg className="icon" {...props}>
-                    <polyline points="18 15 12 9 6 15"></polyline>
-                </svg>
-            );
-
-            const Video = (props) => (
-                <svg className="icon" {...props}>
-                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
-            );
-
-            // Monte Carlo Simulation Engine
-            class TelestrokeSimulator {
-                constructor() {
-                    this.numSimulations = 1000;
-                    this.projectionYears = [2025, 2026, 2027, 2028, 2029, 2030];
-                }
-
-                normalRandom(mean, sd) {
-                    let u = 0, v = 0;
-                    while(u === 0) u = Math.random();
-                    while(v === 0) v = Math.random();
-                    return mean + sd * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-                }
-
-                simulate(historicalData, growthParams) {
-                    const { lambdaNewPartners, meanConsultGrowth, sdConsultGrowth, meanTransferRate, sdTransferRate, meanVideoGrowth, sdVideoGrowth } = growthParams;
-                    
-                    const simResults = {
-                        partners: [],
-                        consults: [],
-                        transfers: [],
-                        videoConsults: []
-                    };
-
-                    const years = Object.keys(historicalData.partners).sort();
-                    const lastYear = years[years.length - 1];
-                    const currentPartners = historicalData.partners[lastYear];
-                    const currentConsults = historicalData.consults[lastYear];
-                    const currentVideoConsults = historicalData.videoConsults[lastYear];
-
-                    for (let sim = 0; sim < this.numSimulations; sim++) {
-                        let partners = currentPartners;
-                        let consults = currentConsults;
-                        let videoConsults = currentVideoConsults;
-                        
-                        const partnersSim = [];
-                        const consultsSim = [];
-                        const transfersSim = [];
-                        const videoConsultsSim = [];
-
-                        for (let yearIdx = 0; yearIdx < this.projectionYears.length; yearIdx++) {
-                            const newPartners = yearIdx === 0 ? 3 : lambdaNewPartners;
-                            partners += newPartners;
-
-                            const meanPerPartner = meanConsultGrowth / Math.max(1, lambdaNewPartners);
-                            const sdPerPartner = sdConsultGrowth / Math.sqrt(Math.max(1, lambdaNewPartners));
-                            let growth = 0;
-                            for (let i = 0; i < newPartners; i++) {
-                                growth += this.normalRandom(meanPerPartner, sdPerPartner);
-                            }
-                            consults += growth;
-
-                            videoConsults += this.normalRandom(meanVideoGrowth, sdVideoGrowth);
-
-                            let transferRate = this.normalRandom(meanTransferRate, sdTransferRate);
-                            transferRate = Math.max(0, Math.min(1, transferRate));
-                            const transfers = Math.round(consults * transferRate);
-
-                            partnersSim.push(partners);
-                            consultsSim.push(consults);
-                            transfersSim.push(transfers);
-                            videoConsultsSim.push(Math.max(0, Math.round(videoConsults)));
-                        }
-
-                        simResults.partners.push(partnersSim);
-                        simResults.consults.push(consultsSim);
-                        simResults.transfers.push(transfersSim);
-                        simResults.videoConsults.push(videoConsultsSim);
-                    }
-
-                    return this.calculateSummaryStats(simResults);
-                }
-
-                calculateSummaryStats(simResults) {
-                    const summary = {
-                        partners: [],
-                        consults: [],
-                        transfers: [],
-                        videoConsults: []
-                    };
-
-                    for (let yearIdx = 0; yearIdx < this.projectionYears.length; yearIdx++) {
-                        const partnersYear = simResults.partners.map(sim => sim[yearIdx]).sort((a, b) => a - b);
-                        const consultsYear = simResults.consults.map(sim => sim[yearIdx]).sort((a, b) => a - b);
-                        const transfersYear = simResults.transfers.map(sim => sim[yearIdx]).sort((a, b) => a - b);
-                        const videoConsultsYear = simResults.videoConsults.map(sim => sim[yearIdx]).sort((a, b) => a - b);
-
-                        summary.partners.push({
-                            year: this.projectionYears[yearIdx],
-                            mean: partnersYear.reduce((a, b) => a + b, 0) / partnersYear.length,
-                            ciLower: partnersYear[Math.floor(partnersYear.length * 0.025)],
-                            ciUpper: partnersYear[Math.floor(partnersYear.length * 0.975)]
-                        });
-
-                        summary.consults.push({
-                            year: this.projectionYears[yearIdx],
-                            mean: consultsYear.reduce((a, b) => a + b, 0) / consultsYear.length,
-                            ciLower: consultsYear[Math.floor(consultsYear.length * 0.025)],
-                            ciUpper: consultsYear[Math.floor(consultsYear.length * 0.975)]
-                        });
-
-                        summary.transfers.push({
-                            year: this.projectionYears[yearIdx],
-                            mean: transfersYear.reduce((a, b) => a + b, 0) / transfersYear.length,
-                            ciLower: transfersYear[Math.floor(transfersYear.length * 0.025)],
-                            ciUpper: transfersYear[Math.floor(transfersYear.length * 0.975)]
-                        });
-
-                        summary.videoConsults.push({
-                            year: this.projectionYears[yearIdx],
-                            mean: videoConsultsYear.reduce((a, b) => a + b, 0) / videoConsultsYear.length,
-                            ciLower: videoConsultsYear[Math.floor(videoConsultsYear.length * 0.025)],
-                            ciUpper: videoConsultsYear[Math.floor(videoConsultsYear.length * 0.975)]
-                        });
-                    }
-
-                    return summary;
-                }
-            }
-
-            function TelestrokeSimulatorApp() {
-                const [historicalData, setHistoricalData] = useState({
-                    partners: { 2019: 5, 2020: 5, 2021: 7, 2022: 11, 2023: 12, 2024: 13 },
-                    consults: { 2019: 707, 2020: 639, 2021: 759, 2022: 912, 2023: 1031, 2024: 1171 },
-                    transfers: { 2019: 163, 2020: 167, 2021: 145, 2022: 175, 2023: 171, 2024: 252 },
-                    videoConsults: { 2019: 86, 2020: 99, 2021: 136, 2022: 154, 2023: 169, 2024: 182 }
-                });
-
-                const [growthScenarios, setGrowthScenarios] = useState({
-                    prior: {
-                        lambdaNewPartners: 2,
-                        meanConsultGrowth: 100,
-                        sdConsultGrowth: 25,
-                        meanTransferRate: 0.2,
-                        sdTransferRate: 0.05,
-                        meanVideoGrowth: 15,
-                        sdVideoGrowth: 5
-                    },
-                    conservative: {
-                        lambdaNewPartners: 1,
-                        meanConsultGrowth: 50,
-                        sdConsultGrowth: 15,
-                        meanTransferRate: 0.15,
-                        sdTransferRate: 0.05,
-                        meanVideoGrowth: 8,
-                        sdVideoGrowth: 3
-                    }
-                });
-
-                const [showConfidenceInterval, setShowConfidenceInterval] = useState(true);
-                const [simResults, setSimResults] = useState(null);
-                const [isSimulating, setIsSimulating] = useState(false);
-                const [expandedSections, setExpandedSections] = useState({
-                    historical: true,
-                    parameters: true
-                });
-                const [editingHistorical, setEditingHistorical] = useState(false);
-
-                const simulator = useMemo(() => new TelestrokeSimulator(), []);
-
-                const runSimulation = useCallback(() => {
-                    setIsSimulating(true);
-                    
-                    setTimeout(() => {
-                        try {
-                            const priorResults = simulator.simulate(historicalData, growthScenarios.prior);
-                            const conservativeResults = simulator.simulate(historicalData, growthScenarios.conservative);
-                            
-                            setSimResults({
-                                prior: priorResults,
-                                conservative: conservativeResults
-                            });
-                        } catch (error) {
-                            console.error('Simulation error:', error);
-                            alert('Error running simulation. Please check the console.');
-                        }
-                        setIsSimulating(false);
-                    }, 100);
-                }, [historicalData, growthScenarios, simulator]);
-
-                useEffect(() => {
-                    runSimulation();
-                }, [runSimulation]);
-
-                const toggleSection = (section) => {
-                    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-                };
-
-                const addHistoricalYear = () => {
-                    const years = Object.keys(historicalData.partners).map(Number).sort();
-                    const newYear = Math.min(...years) - 1;
-                    
-                    setHistoricalData({
-                        partners: { ...historicalData.partners, [newYear]: 0 },
-                        consults: { ...historicalData.consults, [newYear]: 0 },
-                        transfers: { ...historicalData.transfers, [newYear]: 0 },
-                        videoConsults: { ...historicalData.videoConsults, [newYear]: 0 }
-                    });
-                };
-
-                const updateHistoricalData = (year, metric, value) => {
-                    setHistoricalData(prev => ({
-                        ...prev,
-                        [metric]: { ...prev[metric], [year]: parseInt(value) || 0 }
-                    }));
-                };
-
-                const deleteHistoricalYear = (year) => {
-                    const newData = { partners: {}, consults: {}, transfers: {}, videoConsults: {} };
-                    Object.keys(historicalData.partners).forEach(y => {
-                        if (y !== year.toString()) {
-                            newData.partners[y] = historicalData.partners[y];
-                            newData.consults[y] = historicalData.consults[y];
-                            newData.transfers[y] = historicalData.transfers[y];
-                            newData.videoConsults[y] = historicalData.videoConsults[y];
-                        }
-                    });
-                    setHistoricalData(newData);
-                };
-
-                const prepareChartData = (metric) => {
-                    if (!simResults) return [];
-
-                    const historicalYears = Object.keys(historicalData[metric]).sort();
-                    const data = [];
-
-                    historicalYears.forEach(year => {
-                        data.push({
-                            year: parseInt(year),
-                            historical: historicalData[metric][year],
-                            type: 'historical'
-                        });
-                    });
-
-                    simResults.prior[metric].forEach((point, idx) => {
-                        const conservativePoint = simResults.conservative[metric][idx];
-                        data.push({
-                            year: point.year,
-                            priorMean: point.mean,
-                            priorCiLower: point.ciLower,
-                            priorCiUpper: point.ciUpper,
-                            priorCiDiff: point.ciUpper - point.ciLower,
-                            conservativeMean: conservativePoint.mean,
-                            conservativeCiLower: conservativePoint.ciLower,
-                            conservativeCiUpper: conservativePoint.ciUpper,
-                            conservativeCiDiff: conservativePoint.ciUpper - conservativePoint.ciLower,
-                            type: 'projection'
-                        });
-                    });
-
-                    return data;
-                };
-
-                const exportCSV = () => {
-                    if (!simResults) return;
-
-                    let csvContent = "Year,Metric,Scenario,Mean,CI_Lower,CI_Upper\n";
-                    
-                    ['partners', 'consults', 'transfers', 'videoConsults'].forEach(metric => {
-                        Object.keys(historicalData[metric]).forEach(year => {
-                            csvContent += `${year},${metric},historical,${historicalData[metric][year]},,\n`;
-                        });
-                        
-                        ['prior', 'conservative'].forEach(scenario => {
-                            simResults[scenario][metric].forEach(point => {
-                                csvContent += `${point.year},${metric},${scenario},${point.mean.toFixed(0)},${point.ciLower.toFixed(0)},${point.ciUpper.toFixed(0)}\n`;
-                            });
-                        });
-                    });
-
-                    const blob = new Blob([csvContent], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'telestroke_projections.csv';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                };
-
-                const generateReport = () => {
-                    if (!simResults) return;
-                    
-                    let report = `TELESTROKE PROGRAM GROWTH PROJECTIONS\n`;
-                    report += `${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
-                    report += `${'='.repeat(80)}\n\n`;
-                    
-                    const lastIdx = simResults.prior.consults.length - 1;
-                    const currentConsults = historicalData.consults[2024];
-                    const projectedPrior = simResults.prior.consults[lastIdx].mean;
-                    const projectedCons = simResults.conservative.consults[lastIdx].mean;
-                    
-                    report += `Current Annual Consults (2024): ${currentConsults.toLocaleString()}\n\n`;
-                    report += `Projected 2030 Consults:\n`;
-                    report += `• Continued Prior Growth: ${Math.round(projectedPrior).toLocaleString()} (${((projectedPrior/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
-                    report += `  95% CI: ${Math.round(simResults.prior.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(simResults.prior.consults[lastIdx].ciUpper).toLocaleString()}\n\n`;
-                    report += `• Conservative: ${Math.round(projectedCons).toLocaleString()} (${((projectedCons/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
-                    report += `  95% CI: ${Math.round(simResults.conservative.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(simResults.conservative.consults[lastIdx].ciUpper).toLocaleString()}\n`;
-                    
-                    const blob = new Blob([report], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Telestroke_Report_${new Date().toISOString().split('T')[0]}.txt`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                };
-
-                return (
-                    <div className="min-h-screen bg-gray-50">
-                        <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-                            <div className="max-w-7xl mx-auto px-4 py-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <Activity className="h-8 w-8 text-blue-600" />
-                                        <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">Telestroke Growth Projections</h1>
-                                            <p className="text-sm text-gray-600">Monte Carlo Simulation Model</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={exportCSV}
-                                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
-                                            disabled={!simResults}
-                                        >
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Export Data
-                                        </button>
-                                        <button
-                                            onClick={generateReport}
-                                            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center"
-                                            disabled={!simResults}
-                                        >
-                                            <FileText className="h-4 w-4 mr-2" />
-                                            Generate Report
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        <main className="max-w-7xl mx-auto px-4 py-8">
-                            {/* Historical Data Section */}
-                            <div className="bg-white rounded-lg shadow-md mb-6">
-                                <div 
-                                    className="p-6 cursor-pointer flex items-center justify-between"
-                                    onClick={() => toggleSection('historical')}
-                                >
-                                    <h2 className="text-lg font-semibold flex items-center">
-                                        <Calendar className="h-5 w-5 mr-2" />
-                                        Historical Data
-                                    </h2>
-                                    {expandedSections.historical ? <ChevronUp /> : <ChevronDown />}
-                                </div>
-                                
-                                {expandedSections.historical && (
-                                    <div className="px-6 pb-6">
-                                        <div className="mb-4 flex items-center justify-between">
-                                            <p className="text-sm text-gray-600">
-                                                Enter your historical telestroke volumes. These numbers will be used as the baseline for projections.
-                                            </p>
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => setEditingHistorical(!editingHistorical)}
-                                                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center"
-                                                >
-                                                    <Edit2 className="h-4 w-4 mr-1" />
-                                                    {editingHistorical ? 'Done Editing' : 'Edit Data'}
-                                                </button>
-                                                {editingHistorical && (
-                                                    <button
-                                                        onClick={addHistoricalYear}
-                                                        className="text-green-600 hover:text-green-700 text-sm flex items-center"
-                                                    >
-                                                        <Plus className="h-4 w-4 mr-1" />
-                                                        Add Year
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full">
-                                                <thead>
-                                                    <tr className="border-b-2 border-gray-200">
-                                                        <th className="text-left py-2 px-3">Year</th>
-                                                        <th className="text-center py-2 px-3">Partner Sites</th>
-                                                        <th className="text-center py-2 px-3">Total Consults</th>
-                                                        <th className="text-center py-2 px-3">Video Consults</th>
-                                                        <th className="text-center py-2 px-3">Transfers</th>
-                                                        <th className="text-center py-2 px-3">Transfer Rate</th>
-                                                        {editingHistorical && <th className="w-10"></th>}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {Object.keys(historicalData.partners).sort().map(year => (
-                                                        <tr key={year} className="border-b border-gray-100 hover:bg-gray-50">
-                                                            <td className="py-3 px-3 font-medium">{year}</td>
-                                                            <td className="text-center px-3">
-                                                                {editingHistorical ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={historicalData.partners[year]}
-                                                                        onChange={(e) => updateHistoricalData(year, 'partners', e.target.value)}
-                                                                        className="w-20 px-2 py-1 border rounded text-center"
-                                                                    />
-                                                                ) : (
-                                                                    <span className="font-medium">{historicalData.partners[year]}</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="text-center px-3">
-                                                                {editingHistorical ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={historicalData.consults[year]}
-                                                                        onChange={(e) => updateHistoricalData(year, 'consults', e.target.value)}
-                                                                        className="w-24 px-2 py-1 border rounded text-center"
-                                                                    />
-                                                                ) : (
-                                                                    <span className="font-medium">{historicalData.consults[year].toLocaleString()}</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="text-center px-3">
-                                                                {editingHistorical ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={historicalData.videoConsults[year]}
-                                                                        onChange={(e) => updateHistoricalData(year, 'videoConsults', e.target.value)}
-                                                                        className="w-20 px-2 py-1 border rounded text-center"
-                                                                    />
-                                                                ) : (
-                                                                    <span className="font-medium">{historicalData.videoConsults[year]}</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="text-center px-3">
-                                                                {editingHistorical ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={historicalData.transfers[year]}
-                                                                        onChange={(e) => updateHistoricalData(year, 'transfers', e.target.value)}
-                                                                        className="w-20 px-2 py-1 border rounded text-center"
-                                                                    />
-                                                                ) : (
-                                                                    <span className="font-medium">{historicalData.transfers[year]}</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="text-center px-3 text-gray-600">
-                                                                {historicalData.consults[year] > 0 
-                                                                    ? `${((historicalData.transfers[year] / historicalData.consults[year]) * 100).toFixed(1)}%`
-                                                                    : '-'
-                                                                }
-                                                            </td>
-                                                            {editingHistorical && (
-                                                                <td className="text-center">
-                                                                    <button
-                                                                        onClick={() => deleteHistoricalYear(year)}
-                                                                        className="text-red-600 hover:text-red-700"
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </button>
-                                                                </td>
-                                                            )}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        {editingHistorical && (
-                                            <button
-                                                onClick={runSimulation}
-                                                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                                            >
-                                                Update Projections
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Growth Parameters */}
-                            <div className="bg-white rounded-lg shadow-md mb-6">
-                                <div 
-                                    className="p-6 cursor-pointer flex items-center justify-between"
-                                    onClick={() => toggleSection('parameters')}
-                                >
-                                    <h2 className="text-lg font-semibold flex items-center">
-                                        <Sliders className="h-5 w-5 mr-2" />
-                                        Growth Scenarios
-                                    </h2>
-                                    {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
-                                </div>
-                                
-                                {expandedSections.parameters && (
-                                    <div className="px-6 pb-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {/* Continued Prior Growth */}
-                                            <div className="bg-cyan-50 p-4 rounded-lg">
-                                                <h3 className="font-semibold text-cyan-900 mb-4 flex items-center">
-                                                    <TrendingUp className="h-5 w-5 mr-2" />
-                                                    Continued Prior Growth Scenario
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            New Partner Sites per Year
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            value={growthScenarios.prior.lambdaNewPartners}
-                                                            onChange={(e) => setGrowthScenarios({
-                                                                ...growthScenarios,
-                                                                prior: { ...growthScenarios.prior, lambdaNewPartners: parseInt(e.target.value) || 0 }
-                                                            })}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                                        />
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Additional Consults per Year
-                                                        </label>
-                                                        <div className="flex space-x-2">
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.prior.meanConsultGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    prior: { ...growthScenarios.prior, meanConsultGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="Mean"
-                                                            />
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.prior.sdConsultGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    prior: { ...growthScenarios.prior, sdConsultGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="SD"
-                                                            />
-                                                        </div>
-                                                        <p className="text-xs text-gray-500 mt-1">Mean ± Standard Deviation</p>
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Transfer Rate
-                                                        </label>
-                                                        <div className="flex space-x-2">
-                                                            <div className="flex items-center space-x-2">
-                                                                <input
-                                                                    type="number"
-                                                                    value={Math.round(growthScenarios.prior.meanTransferRate * 100)}
-                                                                    onChange={(e) => setGrowthScenarios({
-                                                                        ...growthScenarios,
-                                                                        prior: { ...growthScenarios.prior, meanTransferRate: (parseInt(e.target.value) || 0) / 100 }
-                                                                    })}
-                                                                    className="w-20 px-3 py-2 border border-gray-300 rounded-md"
-                                                                />
-                                                                <span className="text-gray-600">%</span>
-                                                            </div>
-                                                            <div className="flex items-center space-x-2">
-                                                                <span className="text-gray-600">±</span>
-                                                                <input
-                                                                    type="number"
-                                                                    value={Math.round(growthScenarios.prior.sdTransferRate * 100)}
-                                                                    onChange={(e) => setGrowthScenarios({
-                                                                        ...growthScenarios,
-                                                                        prior: { ...growthScenarios.prior, sdTransferRate: (parseInt(e.target.value) || 0) / 100 }
-                                                                    })}
-                                                                    className="w-16 px-3 py-2 border border-gray-300 rounded-md"
-                                                                />
-                                                                <span className="text-gray-600">%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Video Consult Growth per Year
-                                                        </label>
-                                                        <div className="flex space-x-2">
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.prior.meanVideoGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    prior: { ...growthScenarios.prior, meanVideoGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="Mean"
-                                                            />
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.prior.sdVideoGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    prior: { ...growthScenarios.prior, sdVideoGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="SD"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Conservative Growth */}
-                                            <div className="bg-red-50 p-4 rounded-lg">
-                                                <h3 className="font-semibold text-red-900 mb-4 flex items-center">
-                                                    <BarChart2 className="h-5 w-5 mr-2" />
-                                                    Conservative Growth Scenario
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            New Partner Sites per Year
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            value={growthScenarios.conservative.lambdaNewPartners}
-                                                            onChange={(e) => setGrowthScenarios({
-                                                                ...growthScenarios,
-                                                                conservative: { ...growthScenarios.conservative, lambdaNewPartners: parseInt(e.target.value) || 0 }
-                                                            })}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                                        />
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Additional Consults per Year
-                                                        </label>
-                                                        <div className="flex space-x-2">
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.conservative.meanConsultGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    conservative: { ...growthScenarios.conservative, meanConsultGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="Mean"
-                                                            />
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.conservative.sdConsultGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    conservative: { ...growthScenarios.conservative, sdConsultGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="SD"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Transfer Rate
-                                                        </label>
-                                                        <div className="flex space-x-2">
-                                                            <div className="flex items-center space-x-2">
-                                                                <input
-                                                                    type="number"
-                                                                    value={Math.round(growthScenarios.conservative.meanTransferRate * 100)}
-                                                                    onChange={(e) => setGrowthScenarios({
-                                                                        ...growthScenarios,
-                                                                        conservative: { ...growthScenarios.conservative, meanTransferRate: (parseInt(e.target.value) || 0) / 100 }
-                                                                    })}
-                                                                    className="w-20 px-3 py-2 border border-gray-300 rounded-md"
-                                                                />
-                                                                <span className="text-gray-600">%</span>
-                                                            </div>
-                                                            <div className="flex items-center space-x-2">
-                                                                <span className="text-gray-600">±</span>
-                                                                <input
-                                                                    type="number"
-                                                                    value={Math.round(growthScenarios.conservative.sdTransferRate * 100)}
-                                                                    onChange={(e) => setGrowthScenarios({
-                                                                        ...growthScenarios,
-                                                                        conservative: { ...growthScenarios.conservative, sdTransferRate: (parseInt(e.target.value) || 0) / 100 }
-                                                                    })}
-                                                                    className="w-16 px-3 py-2 border border-gray-300 rounded-md"
-                                                                />
-                                                                <span className="text-gray-600">%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Video Consult Growth per Year
-                                                        </label>
-                                                        <div className="flex space-x-2">
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.conservative.meanVideoGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    conservative: { ...growthScenarios.conservative, meanVideoGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="Mean"
-                                                            />
-                                                            <input
-                                                                type="number"
-                                                                value={growthScenarios.conservative.sdVideoGrowth}
-                                                                onChange={(e) => setGrowthScenarios({
-                                                                    ...growthScenarios,
-                                                                    conservative: { ...growthScenarios.conservative, sdVideoGrowth: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-                                                                placeholder="SD"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6 flex items-center justify-between">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={showConfidenceInterval}
-                                                    onChange={(e) => setShowConfidenceInterval(e.target.checked)}
-                                                    className="mr-2 h-4 w-4 text-blue-600"
-                                                />
-                                                <span className="text-sm text-gray-700">Show 95% Confidence Intervals</span>
-                                            </label>
-                                            <button
-                                                onClick={runSimulation}
-                                                disabled={isSimulating}
-                                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
-                                            >
-                                                {isSimulating ? (
-                                                    <>
-                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                        Running Simulation...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Activity className="h-4 w-4 mr-2" />
-                                                        Run Simulation
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Visualization Panels */}
-                            {simResults && (
-                                <>
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                        {/* Consults Chart */}
-                                        <div className="bg-white rounded-lg shadow-md p-6">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center">
-                                                <TrendingUp className="h-5 w-5 mr-2" />
-                                                Annual Consults
-                                            </h3>
-                                            <ResponsiveContainer width="100%" height={350}>
-                                                <ComposedChart data={prepareChartData('consults')}>
-                                                    <defs>
-                                                        <linearGradient id="colorPrior" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#0891b2" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                        <linearGradient id="colorConservative" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                    <XAxis dataKey="year" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Area
-                                                                type="monotone"
-                                                                dataKey="conservativeCiLower"
-                                                                stackId="1"
-                                                                stroke="none"
-                                                                fill="none"
-                                                            />
-                                                            <Area
-                                                                type="monotone"
-                                                                dataKey="conservativeCiDiff"
-                                                                stackId="1"
-                                                                stroke="none"
-                                                                fill="url(#colorConservative)"
-                                                            />
-                                                            
-                                                            <Area
-                                                                type="monotone"
-                                                                dataKey="priorCiLower"
-                                                                stackId="2"
-                                                                stroke="none"
-                                                                fill="none"
-                                                            />
-                                                            <Area
-                                                                type="monotone"
-                                                                dataKey="priorCiDiff"
-                                                                stackId="2"
-                                                                stroke="none"
-                                                                fill="url(#colorPrior)"
-                                                            />
-                                                        </>
-                                                    )}
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Line type="monotone" dataKey="conservativeCiUpper" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="conservativeCiLower" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiUpper" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiLower" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                        </>
-                                                    )}
-                                                    
-                                                    <Line type="monotone" dataKey="historical" stroke="#1f2937" strokeWidth={3} dot={{ r: 5, fill: '#1f2937' }} connectNulls={false} />
-                                                    <Line type="monotone" dataKey="priorMean" stroke="#0891b2" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#0891b2' }} />
-                                                    <Line type="monotone" dataKey="conservativeMean" stroke="#dc2626" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#dc2626' }} />
-                                                    
-                                                    <ReferenceLine x={2024} stroke="#9ca3af" strokeDasharray="3 3" />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
-                                        </div>
-
-                                        {/* Video Consults Chart */}
-                                        <div className="bg-white rounded-lg shadow-md p-6">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center">
-                                                <Video className="h-5 w-5 mr-2" />
-                                                Video Consults
-                                            </h3>
-                                            <ResponsiveContainer width="100%" height={350}>
-                                                <ComposedChart data={prepareChartData('videoConsults')}>
-                                                    <defs>
-                                                        <linearGradient id="colorPriorVideo" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#0891b2" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                        <linearGradient id="colorConservativeVideo" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                    <XAxis dataKey="year" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Area type="monotone" dataKey="conservativeCiLower" stackId="1" stroke="none" fill="none" />
-                                                            <Area type="monotone" dataKey="conservativeCiDiff" stackId="1" stroke="none" fill="url(#colorConservativeVideo)" />
-                                                            <Area type="monotone" dataKey="priorCiLower" stackId="2" stroke="none" fill="none" />
-                                                            <Area type="monotone" dataKey="priorCiDiff" stackId="2" stroke="none" fill="url(#colorPriorVideo)" />
-                                                        </>
-                                                    )}
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Line type="monotone" dataKey="conservativeCiUpper" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="conservativeCiLower" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiUpper" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiLower" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                        </>
-                                                    )}
-                                                    
-                                                    <Line type="monotone" dataKey="historical" stroke="#1f2937" strokeWidth={3} dot={{ r: 5, fill: '#1f2937' }} connectNulls={false} />
-                                                    <Line type="monotone" dataKey="priorMean" stroke="#0891b2" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#0891b2' }} />
-                                                    <Line type="monotone" dataKey="conservativeMean" stroke="#dc2626" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#dc2626' }} />
-                                                    
-                                                    <ReferenceLine x={2024} stroke="#9ca3af" strokeDasharray="3 3" />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                        {/* Partners Chart */}
-                                        <div className="bg-white rounded-lg shadow-md p-6">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center">
-                                                <Users className="h-5 w-5 mr-2" />
-                                                Partner Sites
-                                            </h3>
-                                            <ResponsiveContainer width="100%" height={350}>
-                                                <ComposedChart data={prepareChartData('partners')}>
-                                                    <defs>
-                                                        <linearGradient id="colorPriorPartners" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#0891b2" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                        <linearGradient id="colorConservativePartners" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                    <XAxis dataKey="year" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Area type="monotone" dataKey="conservativeCiLower" stackId="1" stroke="none" fill="none" />
-                                                            <Area type="monotone" dataKey="conservativeCiDiff" stackId="1" stroke="none" fill="url(#colorConservativePartners)" />
-                                                            <Area type="monotone" dataKey="priorCiLower" stackId="2" stroke="none" fill="none" />
-                                                            <Area type="monotone" dataKey="priorCiDiff" stackId="2" stroke="none" fill="url(#colorPriorPartners)" />
-                                                        </>
-                                                    )}
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Line type="monotone" dataKey="conservativeCiUpper" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="conservativeCiLower" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiUpper" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiLower" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                        </>
-                                                    )}
-                                                    
-                                                    <Line type="monotone" dataKey="historical" stroke="#1f2937" strokeWidth={3} dot={{ r: 5, fill: '#1f2937' }} connectNulls={false} />
-                                                    <Line type="monotone" dataKey="priorMean" stroke="#0891b2" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#0891b2' }} />
-                                                    <Line type="monotone" dataKey="conservativeMean" stroke="#dc2626" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#dc2626' }} />
-                                                    
-                                                    <ReferenceLine x={2024} stroke="#9ca3af" strokeDasharray="3 3" />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
-                                        </div>
-
-                                        {/* Transfers Chart */}
-                                        <div className="bg-white rounded-lg shadow-md p-6">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center">
-                                                <BarChart2 className="h-5 w-5 mr-2" />
-                                                Patient Transfers
-                                            </h3>
-                                            <ResponsiveContainer width="100%" height={350}>
-                                                <ComposedChart data={prepareChartData('transfers')}>
-                                                    <defs>
-                                                        <linearGradient id="colorPriorTransfers" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#0891b2" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                        <linearGradient id="colorConservativeTransfers" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
-                                                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                    <XAxis dataKey="year" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Area type="monotone" dataKey="conservativeCiLower" stackId="1" stroke="none" fill="none" />
-                                                            <Area type="monotone" dataKey="conservativeCiDiff" stackId="1" stroke="none" fill="url(#colorConservativeTransfers)" />
-                                                            <Area type="monotone" dataKey="priorCiLower" stackId="2" stroke="none" fill="none" />
-                                                            <Area type="monotone" dataKey="priorCiDiff" stackId="2" stroke="none" fill="url(#colorPriorTransfers)" />
-                                                        </>
-                                                    )}
-                                                    
-                                                    {showConfidenceInterval && (
-                                                        <>
-                                                            <Line type="monotone" dataKey="conservativeCiUpper" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="conservativeCiLower" stroke="#dc2626" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiUpper" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                            <Line type="monotone" dataKey="priorCiLower" stroke="#0891b2" strokeWidth={1} strokeDasharray="2 2" dot={false} />
-                                                        </>
-                                                    )}
-                                                    
-                                                    <Line type="monotone" dataKey="historical" stroke="#1f2937" strokeWidth={3} dot={{ r: 5, fill: '#1f2937' }} connectNulls={false} />
-                                                    <Line type="monotone" dataKey="priorMean" stroke="#0891b2" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#0891b2' }} />
-                                                    <Line type="monotone" dataKey="conservativeMean" stroke="#dc2626" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#dc2626' }} />
-                                                    
-                                                    <ReferenceLine x={2024} stroke="#9ca3af" strokeDasharray="3 3" />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* Summary Statistics */}
-                            {simResults && (
-                                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                    <h3 className="text-lg font-semibold mb-4">
-                                        2030 Projections Summary
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                        <div>
-                                            <h4 className="font-medium text-gray-700 mb-3">Annual Consults</h4>
-                                            <div className="space-y-3">
-                                                <div className="bg-cyan-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-cyan-700 font-medium">Continued Prior Growth</div>
-                                                    <div className="text-2xl font-bold text-cyan-900">
-                                                        {Math.round(simResults.prior.consults[simResults.prior.consults.length - 1].mean).toLocaleString()}
-                                                    </div>
-                                                    <div className="text-sm text-cyan-600">
-                                                        95% CI: {Math.round(simResults.prior.consults[simResults.prior.consults.length - 1].ciLower).toLocaleString()} - {Math.round(simResults.prior.consults[simResults.prior.consults.length - 1].ciUpper).toLocaleString()}
-                                                    </div>
-                                                </div>
-                                                <div className="bg-red-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-red-700 font-medium">Conservative</div>
-                                                    <div className="text-2xl font-bold text-red-900">
-                                                        {Math.round(simResults.conservative.consults[simResults.conservative.consults.length - 1].mean).toLocaleString()}
-                                                    </div>
-                                                    <div className="text-sm text-red-600">
-                                                        95% CI: {Math.round(simResults.conservative.consults[simResults.conservative.consults.length - 1].ciLower).toLocaleString()} - {Math.round(simResults.conservative.consults[simResults.conservative.consults.length - 1].ciUpper).toLocaleString()}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <h4 className="font-medium text-gray-700 mb-3">Video Consults</h4>
-                                            <div className="space-y-3">
-                                                <div className="bg-cyan-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-cyan-700 font-medium">Continued Prior Growth</div>
-                                                    <div className="text-2xl font-bold text-cyan-900">
-                                                        {Math.round(simResults.prior.videoConsults[simResults.prior.videoConsults.length - 1].mean)}
-                                                    </div>
-                                                    <div className="text-sm text-cyan-600">
-                                                        95% CI: {Math.round(simResults.prior.videoConsults[simResults.prior.videoConsults.length - 1].ciLower)} - {Math.round(simResults.prior.videoConsults[simResults.prior.videoConsults.length - 1].ciUpper)}
-                                                    </div>
-                                                </div>
-                                                <div className="bg-red-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-red-700 font-medium">Conservative</div>
-                                                    <div className="text-2xl font-bold text-red-900">
-                                                        {Math.round(simResults.conservative.videoConsults[simResults.conservative.videoConsults.length - 1].mean)}
-                                                    </div>
-                                                    <div className="text-sm text-red-600">
-                                                        95% CI: {Math.round(simResults.conservative.videoConsults[simResults.conservative.videoConsults.length - 1].ciLower)} - {Math.round(simResults.conservative.videoConsults[simResults.conservative.videoConsults.length - 1].ciUpper)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <h4 className="font-medium text-gray-700 mb-3">Partner Sites</h4>
-                                            <div className="space-y-3">
-                                                <div className="bg-cyan-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-cyan-700 font-medium">Continued Prior Growth</div>
-                                                    <div className="text-2xl font-bold text-cyan-900">
-                                                        {Math.round(simResults.prior.partners[simResults.prior.partners.length - 1].mean)}
-                                                    </div>
-                                                    <div className="text-sm text-cyan-600">
-                                                        95% CI: {Math.round(simResults.prior.partners[simResults.prior.partners.length - 1].ciLower)} - {Math.round(simResults.prior.partners[simResults.prior.partners.length - 1].ciUpper)}
-                                                    </div>
-                                                </div>
-                                                <div className="bg-red-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-red-700 font-medium">Conservative</div>
-                                                    <div className="text-2xl font-bold text-red-900">
-                                                        {Math.round(simResults.conservative.partners[simResults.conservative.partners.length - 1].mean)}
-                                                    </div>
-                                                    <div className="text-sm text-red-600">
-                                                        95% CI: {Math.round(simResults.conservative.partners[simResults.conservative.partners.length - 1].ciLower)} - {Math.round(simResults.conservative.partners[simResults.conservative.partners.length - 1].ciUpper)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <h4 className="font-medium text-gray-700 mb-3">Patient Transfers</h4>
-                                            <div className="space-y-3">
-                                                <div className="bg-cyan-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-cyan-700 font-medium">Continued Prior Growth</div>
-                                                    <div className="text-2xl font-bold text-cyan-900">
-                                                        {Math.round(simResults.prior.transfers[simResults.prior.transfers.length - 1].mean)}
-                                                    </div>
-                                                    <div className="text-sm text-cyan-600">
-                                                        95% CI: {Math.round(simResults.prior.transfers[simResults.prior.transfers.length - 1].ciLower)} - {Math.round(simResults.prior.transfers[simResults.prior.transfers.length - 1].ciUpper)}
-                                                    </div>
-                                                </div>
-                                                <div className="bg-red-50 p-3 rounded-lg">
-                                                    <div className="text-sm text-red-700 font-medium">Conservative</div>
-                                                    <div className="text-2xl font-bold text-red-900">
-                                                        {Math.round(simResults.conservative.transfers[simResults.conservative.transfers.length - 1].mean)}
-                                                    </div>
-                                                    <div className="text-sm text-red-600">
-                                                        95% CI: {Math.round(simResults.conservative.transfers[simResults.conservative.transfers.length - 1].ciLower)} - {Math.round(simResults.conservative.transfers[simResults.conservative.transfers.length - 1].ciUpper)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </main>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Telestroke Growth Projections</h1>
+                    <p>Monte Carlo Simulation Model</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="exportBtn" class="btn btn-success" disabled>Export Data</button>
+                    <button id="reportBtn" class="btn btn-primary" disabled>Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Historical Data -->
+        <div class="card">
+            <h2>Historical Data</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th class="text-center">Partner Sites</th>
+                            <th class="text-center">Total Consults</th>
+                            <th class="text-center">Video Consults</th>
+                            <th class="text-center">Transfers</th>
+                            <th class="text-center">Transfer Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historicalTable">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Growth Parameters -->
+        <div class="card">
+            <h2>Growth Scenarios</h2>
+            <div class="parameters-grid">
+                <div class="parameter-section primary">
+                    <h3>Continued Prior Growth</h3>
+                    <div class="parameter-group">
+                        <label>New Partner Sites per Year</label>
+                        <input type="number" id="prior-partners" value="2" min="0" max="10">
                     </div>
-                );
+                    <div class="parameter-group">
+                        <label>Additional Consults per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="prior-consults-mean" value="100" min="0">
+                            <input type="number" id="prior-consults-sd" value="25" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Transfer Rate (% ± %)</label>
+                        <div class="input-group">
+                            <input type="number" id="prior-transfer-mean" value="20" min="0" max="100" style="width: 80px;">
+                            <span>±</span>
+                            <input type="number" id="prior-transfer-sd" value="5" min="0" max="50" style="width: 60px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Video Consult Growth per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="prior-video-mean" value="15" min="0">
+                            <input type="number" id="prior-video-sd" value="5" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="parameter-section danger">
+                    <h3>Conservative Growth</h3>
+                    <div class="parameter-group">
+                        <label>New Partner Sites per Year</label>
+                        <input type="number" id="cons-partners" value="1" min="0" max="10">
+                    </div>
+                    <div class="parameter-group">
+                        <label>Additional Consults per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="cons-consults-mean" value="50" min="0">
+                            <input type="number" id="cons-consults-sd" value="15" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Transfer Rate (% ± %)</label>
+                        <div class="input-group">
+                            <input type="number" id="cons-transfer-mean" value="15" min="0" max="100" style="width: 80px;">
+                            <span>±</span>
+                            <input type="number" id="cons-transfer-sd" value="5" min="0" max="50" style="width: 60px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Video Consult Growth per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="cons-video-mean" value="8" min="0">
+                            <input type="number" id="cons-video-sd" value="3" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button id="runSimBtn" class="btn btn-primary">Run Simulation (1000 iterations)</button>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div id="chartsContainer" class="grid grid-2" style="display: none;">
+            <div class="card">
+                <h3>Annual Consults</h3>
+                <div class="chart-container">
+                    <svg id="chart-consults" width="500" height="300" viewBox="0 0 500 300"></svg>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Partner Sites</h3>
+                <div class="chart-container">
+                    <svg id="chart-partners" width="500" height="300" viewBox="0 0 500 300"></svg>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Patient Transfers</h3>
+                <div class="chart-container">
+                    <svg id="chart-transfers" width="500" height="300" viewBox="0 0 500 300"></svg>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Video Consults</h3>
+                <div class="chart-container">
+                    <svg id="chart-videoConsults" width="500" height="300" viewBox="0 0 500 300"></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div id="summaryContainer" class="card" style="display: none;">
+            <h2>2030 Projections Summary</h2>
+            <div class="grid grid-4" id="summaryGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        const state = {
+            historicalData: {
+                partners: { 2019: 5, 2020: 5, 2021: 7, 2022: 11, 2023: 12, 2024: 13 },
+                consults: { 2019: 707, 2020: 639, 2021: 759, 2022: 912, 2023: 1031, 2024: 1171 },
+                transfers: { 2019: 163, 2020: 167, 2021: 145, 2022: 175, 2023: 171, 2024: 252 },
+                videoConsults: { 2019: 86, 2020: 99, 2021: 136, 2022: 154, 2023: 169, 2024: 182 }
+            },
+            simResults: null,
+            projectionYears: [2025, 2026, 2027, 2028, 2029, 2030]
+        };
+
+        // Monte Carlo Simulation Functions
+        function normalRandom(mean, sd) {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return mean + sd * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        function runSimulation() {
+            const btn = document.getElementById('runSimBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Running Simulation...';
+
+            // Get parameters
+            const params = {
+                prior: {
+                    lambdaNewPartners: parseInt(document.getElementById('prior-partners').value),
+                    meanConsultGrowth: parseInt(document.getElementById('prior-consults-mean').value),
+                    sdConsultGrowth: parseInt(document.getElementById('prior-consults-sd').value),
+                    meanTransferRate: parseInt(document.getElementById('prior-transfer-mean').value) / 100,
+                    sdTransferRate: parseInt(document.getElementById('prior-transfer-sd').value) / 100,
+                    meanVideoGrowth: parseInt(document.getElementById('prior-video-mean').value),
+                    sdVideoGrowth: parseInt(document.getElementById('prior-video-sd').value)
+                },
+                conservative: {
+                    lambdaNewPartners: parseInt(document.getElementById('cons-partners').value),
+                    meanConsultGrowth: parseInt(document.getElementById('cons-consults-mean').value),
+                    sdConsultGrowth: parseInt(document.getElementById('cons-consults-sd').value),
+                    meanTransferRate: parseInt(document.getElementById('cons-transfer-mean').value) / 100,
+                    sdTransferRate: parseInt(document.getElementById('cons-transfer-sd').value) / 100,
+                    meanVideoGrowth: parseInt(document.getElementById('cons-video-mean').value),
+                    sdVideoGrowth: parseInt(document.getElementById('cons-video-sd').value)
+                }
+            };
+
+            setTimeout(() => {
+                state.simResults = {
+                    prior: simulate(params.prior),
+                    conservative: simulate(params.conservative)
+                };
+
+                // Update UI
+                updateCharts();
+                updateSummary();
+                document.getElementById('chartsContainer').style.display = 'grid';
+                document.getElementById('summaryContainer').style.display = 'block';
+                document.getElementById('exportBtn').disabled = false;
+                document.getElementById('reportBtn').disabled = false;
+
+                btn.disabled = false;
+                btn.innerHTML = 'Run Simulation (1000 iterations)';
+            }, 100);
+        }
+
+        function simulate(params) {
+            const numSimulations = 1000;
+            const results = {
+                partners: [],
+                consults: [],
+                transfers: [],
+                videoConsults: []
+            };
+
+            const years = Object.keys(state.historicalData.partners).sort();
+            const lastYear = years[years.length - 1];
+            const currentPartners = state.historicalData.partners[lastYear];
+            const currentConsults = state.historicalData.consults[lastYear];
+            const currentVideoConsults = state.historicalData.videoConsults[lastYear];
+
+            // Run simulations
+            for (let sim = 0; sim < numSimulations; sim++) {
+                let partners = currentPartners;
+                let consults = currentConsults;
+                let videoConsults = currentVideoConsults;
+                
+                const simData = {
+                    partners: [],
+                    consults: [],
+                    transfers: [],
+                    videoConsults: []
+                };
+
+                for (let yearIdx = 0; yearIdx < state.projectionYears.length; yearIdx++) {
+                    const newPartners = yearIdx === 0 ? 3 : params.lambdaNewPartners;
+                    partners += newPartners;
+
+                    const meanPerPartner = params.meanConsultGrowth / Math.max(1, params.lambdaNewPartners);
+                    const sdPerPartner = params.sdConsultGrowth / Math.sqrt(Math.max(1, params.lambdaNewPartners));
+                    let growth = 0;
+                    for (let i = 0; i < newPartners; i++) {
+                        growth += normalRandom(meanPerPartner, sdPerPartner);
+                    }
+                    consults += growth;
+
+                    videoConsults += normalRandom(params.meanVideoGrowth, params.sdVideoGrowth);
+
+                    let transferRate = normalRandom(params.meanTransferRate, params.sdTransferRate);
+                    transferRate = Math.max(0, Math.min(1, transferRate));
+                    const transfers = Math.round(consults * transferRate);
+
+                    simData.partners.push(partners);
+                    simData.consults.push(consults);
+                    simData.transfers.push(transfers);
+                    simData.videoConsults.push(Math.max(0, Math.round(videoConsults)));
+                }
+
+                results.partners.push(simData.partners);
+                results.consults.push(simData.consults);
+                results.transfers.push(simData.transfers);
+                results.videoConsults.push(simData.videoConsults);
             }
 
-            // Render the application
-            try {
-                const container = document.getElementById('root');
-                ReactDOM.render(<TelestrokeSimulatorApp />, container);
-                console.log('App rendered successfully');
-            } catch (error) {
-                console.error('Error rendering app:', error);
-                document.getElementById('root').innerHTML = '<div style="padding: 20px; color: red;">Error loading application. Please check the console for details.</div>';
+            // Calculate summary statistics
+            const summary = {
+                partners: [],
+                consults: [],
+                transfers: [],
+                videoConsults: []
+            };
+
+            for (let yearIdx = 0; yearIdx < state.projectionYears.length; yearIdx++) {
+                ['partners', 'consults', 'transfers', 'videoConsults'].forEach(metric => {
+                    const values = results[metric].map(sim => sim[yearIdx]).sort((a, b) => a - b);
+                    summary[metric].push({
+                        year: state.projectionYears[yearIdx],
+                        mean: values.reduce((a, b) => a + b, 0) / values.length,
+                        ciLower: values[Math.floor(values.length * 0.025)],
+                        ciUpper: values[Math.floor(values.length * 0.975)]
+                    });
+                });
             }
+
+            return summary;
+        }
+
+        // UI Update Functions
+        function populateHistoricalTable() {
+            const tbody = document.getElementById('historicalTable');
+            const years = Object.keys(state.historicalData.partners).sort();
+            
+            tbody.innerHTML = years.map(year => `
+                <tr>
+                    <td>${year}</td>
+                    <td class="text-center">${state.historicalData.partners[year]}</td>
+                    <td class="text-center">${state.historicalData.consults[year].toLocaleString()}</td>
+                    <td class="text-center">${state.historicalData.videoConsults[year]}</td>
+                    <td class="text-center">${state.historicalData.transfers[year]}</td>
+                    <td class="text-center">${((state.historicalData.transfers[year] / state.historicalData.consults[year]) * 100).toFixed(1)}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateCharts() {
+            ['consults', 'partners', 'transfers', 'videoConsults'].forEach(metric => {
+                drawChart(metric);
+            });
+        }
+
+        function drawChart(metric) {
+            const svg = document.getElementById(`chart-${metric}`);
+            const width = 500;
+            const height = 300;
+            const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            // Prepare data
+            const data = [];
+            Object.keys(state.historicalData[metric]).sort().forEach(year => {
+                data.push({
+                    year: parseInt(year),
+                    historical: state.historicalData[metric][year]
+                });
+            });
+            
+            state.simResults.prior[metric].forEach((point, idx) => {
+                const conservativePoint = state.simResults.conservative[metric][idx];
+                data.push({
+                    year: point.year,
+                    priorMean: point.mean,
+                    conservativeMean: conservativePoint.mean
+                });
+            });
+
+            // Calculate scales
+            const allValues = [];
+            data.forEach(d => {
+                if (d.historical !== undefined) allValues.push(d.historical);
+                if (d.priorMean !== undefined) allValues.push(d.priorMean);
+                if (d.conservativeMean !== undefined) allValues.push(d.conservativeMean);
+            });
+            
+            const yMin = Math.min(...allValues) * 0.9;
+            const yMax = Math.max(...allValues) * 1.1;
+            const xMin = Math.min(...data.map(d => d.year));
+            const xMax = Math.max(...data.map(d => d.year));
+
+            const xScale = (year) => margin.left + ((year - xMin) / (xMax - xMin)) * innerWidth;
+            const yScale = (value) => margin.top + innerHeight - ((value - yMin) / (yMax - yMin)) * innerHeight;
+
+            // Clear existing content
+            svg.innerHTML = '';
+
+            // Add grid lines
+            for (let i = 0; i <= 5; i++) {
+                const y = margin.top + (innerHeight * i / 5);
+                const value = yMax - (yMax - yMin) * i / 5;
+                
+                svg.innerHTML += `
+                    <line x1="${margin.left}" y1="${y}" x2="${margin.left + innerWidth}" y2="${y}" 
+                          stroke="#e5e7eb" stroke-width="1"/>
+                    <text x="${margin.left - 10}" y="${y + 5}" text-anchor="end" font-size="12" fill="#6b7280">
+                        ${Math.round(value)}
+                    </text>
+                `;
+            }
+
+            // Add x-axis labels
+            data.filter((d, i) => i % 2 === 0).forEach(d => {
+                svg.innerHTML += `
+                    <text x="${xScale(d.year)}" y="${margin.top + innerHeight + 25}" 
+                          text-anchor="middle" font-size="12" fill="#6b7280">${d.year}</text>
+                `;
+            });
+
+            // Draw lines
+            const historicalPath = data
+                .filter(d => d.historical !== undefined)
+                .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d.year)} ${yScale(d.historical)}`)
+                .join(' ');
+
+            const priorPath = data
+                .filter(d => d.priorMean !== undefined)
+                .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d.year)} ${yScale(d.priorMean)}`)
+                .join(' ');
+
+            const conservativePath = data
+                .filter(d => d.conservativeMean !== undefined)
+                .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d.year)} ${yScale(d.conservativeMean)}`)
+                .join(' ');
+
+            svg.innerHTML += `
+                <path d="${historicalPath}" stroke="#1f2937" stroke-width="3" fill="none"/>
+                <path d="${priorPath}" stroke="#0891b2" stroke-width="2" stroke-dasharray="5,5" fill="none"/>
+                <path d="${conservativePath}" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,5" fill="none"/>
+                
+                <!-- 2024 reference line -->
+                <line x1="${xScale(2024)}" y1="${margin.top}" x2="${xScale(2024)}" y2="${margin.top + innerHeight}" 
+                      stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+                
+                <!-- Legend -->
+                <g transform="translate(${margin.left + innerWidth - 120}, ${margin.top})">
+                    <line x1="0" y1="0" x2="20" y2="0" stroke="#1f2937" stroke-width="3"/>
+                    <text x="25" y="4" font-size="12" fill="#374151">Historical</text>
+                    
+                    <line x1="0" y1="20" x2="20" y2="20" stroke="#0891b2" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="25" y="24" font-size="12" fill="#374151">Prior Growth</text>
+                    
+                    <line x1="0" y1="40" x2="20" y2="40" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="25" y="44" font-size="12" fill="#374151">Conservative</text>
+                </g>
+            `;
+        }
+
+        function updateSummary() {
+            const grid = document.getElementById('summaryGrid');
+            const metrics = [
+                { key: 'consults', label: 'Annual Consults' },
+                { key: 'partners', label: 'Partner Sites' },
+                { key: 'transfers', label: 'Patient Transfers' },
+                { key: 'videoConsults', label: 'Video Consults' }
+            ];
+
+            grid.innerHTML = metrics.map(({ key, label }) => {
+                const prior = state.simResults.prior[key][5];
+                const cons = state.simResults.conservative[key][5];
+                
+                return `
+                    <div>
+                        <h3>${label}</h3>
+                        <div class="stat-box primary">
+                            <div class="stat-label">Continued Prior Growth</div>
+                            <div class="stat-value">${Math.round(prior.mean).toLocaleString()}</div>
+                            <div class="stat-range">
+                                95% CI: ${Math.round(prior.ciLower).toLocaleString()} - ${Math.round(prior.ciUpper).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="stat-box danger">
+                            <div class="stat-label">Conservative</div>
+                            <div class="stat-value">${Math.round(cons.mean).toLocaleString()}</div>
+                            <div class="stat-range">
+                                95% CI: ${Math.round(cons.ciLower).toLocaleString()} - ${Math.round(cons.ciUpper).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function exportCSV() {
+            if (!state.simResults) return;
+
+            let csvContent = "Year,Metric,Scenario,Mean,CI_Lower,CI_Upper\n";
+            
+            ['partners', 'consults', 'transfers', 'videoConsults'].forEach(metric => {
+                Object.keys(state.historicalData[metric]).forEach(year => {
+                    csvContent += `${year},${metric},historical,${state.historicalData[metric][year]},,\n`;
+                });
+                
+                ['prior', 'conservative'].forEach(scenario => {
+                    state.simResults[scenario][metric].forEach(point => {
+                        csvContent += `${point.year},${metric},${scenario},${point.mean.toFixed(0)},${point.ciLower.toFixed(0)},${point.ciUpper.toFixed(0)}\n`;
+                    });
+                });
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'telestroke_projections.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generateReport() {
+            if (!state.simResults) return;
+            
+            let report = `TELESTROKE PROGRAM GROWTH PROJECTIONS\n`;
+            report += `${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+            report += `${'='.repeat(80)}\n\n`;
+            
+            const lastIdx = state.simResults.prior.consults.length - 1;
+            const currentConsults = state.historicalData.consults[2024];
+            const projectedPrior = state.simResults.prior.consults[lastIdx].mean;
+            const projectedCons = state.simResults.conservative.consults[lastIdx].mean;
+            
+            report += `Current Annual Consults (2024): ${currentConsults.toLocaleString()}\n\n`;
+            report += `Projected 2030 Consults:\n`;
+            report += `• Continued Prior Growth: ${Math.round(projectedPrior).toLocaleString()} (${((projectedPrior/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
+            report += `  95% CI: ${Math.round(state.simResults.prior.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(state.simResults.prior.consults[lastIdx].ciUpper).toLocaleString()}\n\n`;
+            report += `• Conservative: ${Math.round(projectedCons).toLocaleString()} (${((projectedCons/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
+            report += `  95% CI: ${Math.round(state.simResults.conservative.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(state.simResults.conservative.consults[lastIdx].ciUpper).toLocaleString()}\n`;
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Telestroke_Report_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            populateHistoricalTable();
+            
+            // Event listeners
+            document.getElementById('runSimBtn').addEventListener('click', runSimulation);
+            document.getElementById('exportBtn').addEventListener('click', exportCSV);
+            document.getElementById('reportBtn').addEventListener('click', generateReport);
+            
+            // Run initial simulation
+            runSimulation();
         });
     </script>
 </body>
