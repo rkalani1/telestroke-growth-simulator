@@ -1,706 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telestroke Growth Projections</title>
-    <!-- React and related libraries from CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Charting and icon libraries -->
-    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
-    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js"></script>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Basic body styling */
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Telestroke Growth Projections</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <!-- The root element for the React application -->
-    <div id="root"></div>
-    
-    <!-- React application script with in-browser JSX transpilation -->
-    <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo, useRef } = React;
-        
-        // =================================================================================
-        // Lucide Icon Component
-        // This component correctly:
-        // 1. Converts PascalCase names (e.g., "TrendingUp") to kebab-case ("trending-up").
-        // 2. Looks up the icon data in `lucide.icons`.
-        // 3. Generates a proper <svg> element using React's `createElement`.
-        // =================================================================================
-        const toKebabCase = (str) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+  <div id="root"></div>
 
-        const LucideIcon = ({ name, className, ...props }) => {
-            if (typeof lucide === 'undefined' || !lucide.icons) {
-                // This check prevents errors if the component renders before the library is ready.
-                return <span className={`inline-block w-4 h-4 ${className || ''}`} />;
-            }
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
 
-            const kebabCaseName = toKebabCase(name);
-            const iconNode = lucide.icons[kebabCaseName];
+    // Use safe Lucide icon rendering
+    const LucideIcon = ({ name, size = 24, color = "currentColor" }) => {
+      const Icon = lucide[name];
+      if (!Icon) return null;
+      const iconNode = Icon.iconNode;
 
-            if (!iconNode) {
-                console.warn(`Icon '${name}' not found.`);
-                return <span className={`inline-block w-4 h-4 ${className || ''}`} />;
-            }
+      return (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          width={size}
+          height={size}
+        >
+          {iconNode.map(([tag, attrs], idx) =>
+            React.createElement(tag, { key: idx, ...attrs })
+          )}
+        </svg>
+      );
+    };
 
-            const [tag, attrs, children] = iconNode;
-            
-            const combinedClassName = `lucide lucide-${kebabCaseName} ${attrs.class || ''} ${className || ''}`.trim();
+    const sampleData = [
+      { year: 2019, consults: 707 },
+      { year: 2020, consults: 639 },
+      { year: 2021, consults: 759 },
+      { year: 2022, consults: 912 },
+      { year: 2023, consults: 1031 },
+      { year: 2024, consults: 1171 }
+    ];
 
-            return (
-                <svg
-                    {...attrs}
-                    {...props}
-                    className={combinedClassName}
-                >
-                    {children.map(([childTag, childAttrs], index) =>
-                        React.createElement(childTag, { ...childAttrs, key: childAttrs.key || index })
-                    )}
-                </svg>
-            );
-        };
+    function App() {
+      return (
+        <div className="min-h-screen bg-gray-50 p-6">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+              <LucideIcon name="Activity" />
+              Telestroke Growth Projections
+            </h1>
+            <p className="text-gray-600 mt-1">Simple demo with historical consults</p>
+          </header>
 
-        // Monte Carlo Simulation Engine
-        class TelestrokeSimulator {
-            constructor() {
-                this.numSimulations = 1000;
-                this.projectionYears = [2025, 2026, 2027, 2028, 2029, 2030];
-            }
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Annual Consults</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={sampleData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="consults" stroke="#3b82f6" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    }
 
-            // Generates a random number from a normal distribution
-            normalRandom(mean, sd) {
-                let u = 0, v = 0;
-                while(u === 0) u = Math.random();
-                while(v === 0) v = Math.random();
-                return mean + sd * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-            }
-
-            // Runs the simulation based on historical data and growth parameters
-            simulate(historicalData, growthParams) {
-                const { lambdaNewPartners, meanConsultGrowth, sdConsultGrowth, meanTransferRate, sdTransferRate, meanVideoGrowth, sdVideoGrowth } = growthParams;
-                
-                const simResults = {
-                    partners: [],
-                    consults: [],
-                    transfers: [],
-                    videoConsults: []
-                };
-
-                const years = Object.keys(historicalData.partners).sort();
-                const lastYear = years[years.length - 1];
-                const currentPartners = historicalData.partners[lastYear];
-                const currentConsults = historicalData.consults[lastYear];
-                const currentVideoConsults = historicalData.videoConsults[lastYear];
-
-                for (let sim = 0; sim < this.numSimulations; sim++) {
-                    let partners = currentPartners;
-                    let consults = currentConsults;
-                    let videoConsults = currentVideoConsults;
-                    
-                    const partnersSim = [];
-                    const consultsSim = [];
-                    const transfersSim = [];
-                    const videoConsultsSim = [];
-
-                    for (let yearIdx = 0; yearIdx < this.projectionYears.length; yearIdx++) {
-                        const newPartners = yearIdx === 0 ? 3 : lambdaNewPartners;
-                        partners += newPartners;
-
-                        const meanPerPartner = meanConsultGrowth / Math.max(1, lambdaNewPartners);
-                        const sdPerPartner = sdConsultGrowth / Math.sqrt(Math.max(1, lambdaNewPartners));
-                        let growth = 0;
-                        for (let i = 0; i < newPartners; i++) {
-                            growth += this.normalRandom(meanPerPartner, sdPerPartner);
-                        }
-                        consults += growth;
-
-                        videoConsults += this.normalRandom(meanVideoGrowth, sdVideoGrowth);
-
-                        let transferRate = this.normalRandom(meanTransferRate, sdTransferRate);
-                        transferRate = Math.max(0, Math.min(1, transferRate)); // Clamp between 0 and 1
-                        const transfers = Math.round(consults * transferRate);
-
-                        partnersSim.push(partners);
-                        consultsSim.push(consults);
-                        transfersSim.push(transfers);
-                        videoConsultsSim.push(Math.max(0, Math.round(videoConsults)));
-                    }
-
-                    simResults.partners.push(partnersSim);
-                    simResults.consults.push(consultsSim);
-                    simResults.transfers.push(transfersSim);
-                    simResults.videoConsults.push(videoConsultsSim);
-                }
-
-                return this.calculateSummaryStats(simResults);
-            }
-
-            // Calculates mean and 95% confidence intervals from simulation results
-            calculateSummaryStats(simResults) {
-                const summary = {
-                    partners: [],
-                    consults: [],
-                    transfers: [],
-                    videoConsults: []
-                };
-
-                for (let yearIdx = 0; yearIdx < this.projectionYears.length; yearIdx++) {
-                    const getYearStats = (metric) => {
-                        const data = simResults[metric].map(sim => sim[yearIdx]).sort((a, b) => a - b);
-                        return {
-                            year: this.projectionYears[yearIdx],
-                            mean: data.reduce((a, b) => a + b, 0) / data.length,
-                            ciLower: data[Math.floor(data.length * 0.025)],
-                            ciUpper: data[Math.floor(data.length * 0.975)]
-                        };
-                    };
-
-                    summary.partners.push(getYearStats('partners'));
-                    summary.consults.push(getYearStats('consults'));
-                    summary.transfers.push(getYearStats('transfers'));
-                    summary.videoConsults.push(getYearStats('videoConsults'));
-                }
-
-                return summary;
-            }
-        }
-
-        // Main Application Component
-        function TelestrokeSimulatorApp() {
-            // FIXED: Add state to track if external libraries (Recharts, Lucide) are loaded.
-            const [librariesLoaded, setLibrariesLoaded] = useState(false);
-
-            // Effect to poll for library availability. This is more robust than window.onload.
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    if (window.Recharts && window.lucide) {
-                        setLibrariesLoaded(true);
-                        clearInterval(interval);
-                    }
-                }, 100); // Poll every 100ms
-
-                return () => clearInterval(interval); // Cleanup on unmount
-            }, []);
-
-            // If libraries are not yet loaded, show a loading message to prevent errors.
-            if (!librariesLoaded) {
-                return (
-                    <div className="flex items-center justify-center min-h-screen">
-                        <div className="text-lg font-semibold text-gray-600">Loading Dashboard...</div>
-                    </div>
-                );
-            }
-
-            // Now that we know the libraries are loaded, we can safely destructure and use them.
-            const { ComposedChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, Area, Line, ReferenceLine } = Recharts;
-
-            const [historicalData, setHistoricalData] = useState({
-                partners: { 2019: 5, 2020: 5, 2021: 7, 2022: 11, 2023: 12, 2024: 13 },
-                consults: { 2019: 707, 2020: 639, 2021: 759, 2022: 912, 2023: 1031, 2024: 1171 },
-                transfers: { 2019: 163, 2020: 167, 2021: 145, 2022: 175, 2023: 171, 2024: 252 },
-                videoConsults: { 2019: 86, 2020: 99, 2021: 136, 2022: 154, 2023: 169, 2024: 182 }
-            });
-
-            const [growthScenarios, setGrowthScenarios] = useState({
-                prior: {
-                    lambdaNewPartners: 2,
-                    meanConsultGrowth: 100,
-                    sdConsultGrowth: 25,
-                    meanTransferRate: 0.2,
-                    sdTransferRate: 0.05,
-                    meanVideoGrowth: 15,
-                    sdVideoGrowth: 5
-                },
-                conservative: {
-                    lambdaNewPartners: 1,
-                    meanConsultGrowth: 50,
-                    sdConsultGrowth: 15,
-                    meanTransferRate: 0.15,
-                    sdTransferRate: 0.05,
-                    meanVideoGrowth: 8,
-                    sdVideoGrowth: 3
-                }
-            });
-
-            const [showConfidenceInterval, setShowConfidenceInterval] = useState(true);
-            const [simResults, setSimResults] = useState(null);
-            const [isSimulating, setIsSimulating] = useState(false);
-            const [expandedSections, setExpandedSections] = useState({
-                historical: true,
-                parameters: true
-            });
-            const [editingHistorical, setEditingHistorical] = useState(false);
-
-            const simulator = useMemo(() => new TelestrokeSimulator(), []);
-
-            const runSimulation = useCallback(() => {
-                setIsSimulating(true);
-                
-                setTimeout(() => {
-                    const priorResults = simulator.simulate(historicalData, growthScenarios.prior);
-                    const conservativeResults = simulator.simulate(historicalData, growthScenarios.conservative);
-                    
-                    setSimResults({
-                        prior: priorResults,
-                        conservative: conservativeResults
-                    });
-                    setIsSimulating(false);
-                }, 100);
-            }, [historicalData, growthScenarios, simulator]);
-
-            useEffect(() => {
-                runSimulation();
-            }, [runSimulation]);
-
-            const toggleSection = (section) => {
-                setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-            };
-            
-            const addHistoricalYear = () => {
-                const years = Object.keys(historicalData.partners).map(Number);
-                if (years.length === 0) return;
-                const lastYear = Math.max(...years);
-                const newYear = lastYear + 1;
-                
-                setHistoricalData(prev => ({
-                    partners: { ...prev.partners, [newYear]: prev.partners[lastYear] || 0 },
-                    consults: { ...prev.consults, [newYear]: 0 },
-                    transfers: { ...prev.transfers, [newYear]: 0 },
-                    videoConsults: { ...prev.videoConsults, [newYear]: 0 }
-                }));
-            };
-
-            const updateHistoricalData = (year, metric, value) => {
-                setHistoricalData(prev => ({
-                    ...prev,
-                    [metric]: { ...prev[metric], [year]: parseInt(value) || 0 }
-                }));
-            };
-
-            const deleteHistoricalYear = (yearToDelete) => {
-                const yearStr = yearToDelete.toString();
-                const newData = { partners: {}, consults: {}, transfers: {}, videoConsults: {} };
-                Object.keys(historicalData.partners).forEach(y => {
-                    if (y !== yearStr) {
-                        newData.partners[y] = historicalData.partners[y];
-                        newData.consults[y] = historicalData.consults[y];
-                        newData.transfers[y] = historicalData.transfers[y];
-                        newData.videoConsults[y] = historicalData.videoConsults[y];
-                    }
-                });
-                setHistoricalData(newData);
-            };
-
-            const prepareChartData = (metric) => {
-                if (!simResults) return [];
-
-                const historicalYears = Object.keys(historicalData[metric]).sort();
-                const data = [];
-
-                historicalYears.forEach(year => {
-                    data.push({
-                        year: parseInt(year),
-                        historical: historicalData[metric][year],
-                        type: 'historical'
-                    });
-                });
-
-                simResults.prior[metric].forEach((point, idx) => {
-                    const conservativePoint = simResults.conservative[metric][idx];
-                    data.push({
-                        year: point.year,
-                        priorMean: point.mean,
-                        priorCiLower: point.ciLower,
-                        priorCiUpper: point.ciUpper,
-                        priorCiDiff: point.ciUpper - point.ciLower,
-                        conservativeMean: conservativePoint.mean,
-                        conservativeCiLower: conservativePoint.ciLower,
-                        conservativeCiUpper: conservativePoint.ciUpper,
-                        conservativeCiDiff: conservativePoint.ciUpper - conservativePoint.ciLower,
-                        type: 'projection'
-                    });
-                });
-
-                return data;
-            };
-
-            const exportCSV = () => {
-                if (!simResults) return;
-
-                let csvContent = "Year,Metric,Scenario,Value,CI_Lower,CI_Upper\n";
-                
-                ['partners', 'consults', 'transfers', 'videoConsults'].forEach(metric => {
-                    Object.keys(historicalData[metric]).forEach(year => {
-                        csvContent += `${year},${metric},historical,${historicalData[metric][year]},,\n`;
-                    });
-                    
-                    ['prior', 'conservative'].forEach(scenario => {
-                        simResults[scenario][metric].forEach(point => {
-                            csvContent += `${point.year},${metric},${scenario},${point.mean.toFixed(0)},${point.ciLower.toFixed(0)},${point.ciUpper.toFixed(0)}\n`;
-                        });
-                    });
-                });
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'telestroke_projections.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-            };
-
-            const generateReport = () => {
-                if (!simResults) return;
-                
-                let report = `TELESTROKE PROGRAM GROWTH PROJECTIONS\n`;
-                report += `${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
-                report += `${'='.repeat(80)}\n\n`;
-                
-                const lastIdx = simResults.prior.consults.length - 1;
-                const lastHistoricalYear = Math.max(...Object.keys(historicalData.consults).map(Number));
-                const currentConsults = historicalData.consults[lastHistoricalYear];
-                const projectedPrior = simResults.prior.consults[lastIdx].mean;
-                const projectedCons = simResults.conservative.consults[lastIdx].mean;
-                
-                report += `Current Annual Consults (${lastHistoricalYear}): ${currentConsults.toLocaleString()}\n\n`;
-                report += `Projected 2030 Consults:\n`;
-                report += `• Continued Prior Growth: ${Math.round(projectedPrior).toLocaleString()} (${((projectedPrior/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
-                report += `  95% CI: ${Math.round(simResults.prior.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(simResults.prior.consults[lastIdx].ciUpper).toLocaleString()}\n\n`;
-                report += `• Conservative: ${Math.round(projectedCons).toLocaleString()} (${((projectedCons/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
-                report += `  95% CI: ${Math.round(simResults.conservative.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(simResults.conservative.consults[lastIdx].ciUpper).toLocaleString()}\n`;
-                
-                const blob = new Blob([report], { type: 'text/plain;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Telestroke_Report_${new Date().toISOString().split('T')[0]}.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
-            };
-
-            return (
-                <div className="min-h-screen bg-gray-50">
-                    <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <LucideIcon name="Activity" className="h-8 w-8 text-blue-600" />
-                                    <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">Telestroke Growth Projections</h1>
-                                        <p className="text-sm text-gray-600">Monte Carlo Simulation Model</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={exportCSV}
-                                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={!simResults}
-                                    >
-                                        <LucideIcon name="Download" className="h-4 w-4 mr-2" />
-                                        Export Data
-                                    </button>
-                                    <button
-                                        onClick={generateReport}
-                                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={!simResults}
-                                    >
-                                        <LucideIcon name="FileText" className="h-4 w-4 mr-2" />
-                                        Generate Report
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </header>
-
-                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                        {/* Historical Data Section */}
-                        <div className="bg-white rounded-lg shadow-md mb-6">
-                            <div 
-                                className="p-6 cursor-pointer flex items-center justify-between"
-                                onClick={() => toggleSection('historical')}
-                            >
-                                <h2 className="text-lg font-semibold flex items-center text-gray-800">
-                                    <LucideIcon name="Calendar" className="h-5 w-5 mr-2" />
-                                    Historical Data
-                                </h2>
-                                {expandedSections.historical ? <LucideIcon name="ChevronUp" /> : <LucideIcon name="ChevronDown" />}
-                            </div>
-                            
-                            {expandedSections.historical && (
-                                <div className="px-6 pb-6">
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <p className="text-sm text-gray-600">
-                                            Enter historical volumes. These numbers are the baseline for projections.
-                                        </p>
-                                        <div className="space-x-2">
-                                            <button
-                                                onClick={() => setEditingHistorical(!editingHistorical)}
-                                                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
-                                            >
-                                                <LucideIcon name="Edit2" className="h-4 w-4 mr-1" />
-                                                {editingHistorical ? 'Done Editing' : 'Edit Data'}
-                                            </button>
-                                            {editingHistorical && (
-                                                <button
-                                                    onClick={addHistoricalYear}
-                                                    className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center"
-                                                >
-                                                    <LucideIcon name="Plus" className="h-4 w-4 mr-1" />
-                                                    Add Year
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b-2 border-gray-200">
-                                                    <th className="text-left py-2 px-3 font-semibold text-gray-600">Year</th>
-                                                    <th className="text-center py-2 px-3 font-semibold text-gray-600">Partner Sites</th>
-                                                    <th className="text-center py-2 px-3 font-semibold text-gray-600">Total Consults</th>
-                                                    <th className="text-center py-2 px-3 font-semibold text-gray-600">Video Consults</th>
-                                                    <th className="text-center py-2 px-3 font-semibold text-gray-600">Transfers</th>
-                                                    <th className="text-center py-2 px-3 font-semibold text-gray-600">Transfer Rate</th>
-                                                    {editingHistorical && <th className="w-10"></th>}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {Object.keys(historicalData.partners).sort().map(year => (
-                                                    <tr key={year} className="border-b border-gray-100 hover:bg-gray-50">
-                                                        <td className="py-3 px-3 font-medium text-gray-800">{year}</td>
-                                                        <td className="text-center px-3">
-                                                            {editingHistorical ? (
-                                                                <input
-                                                                    type="number"
-                                                                    value={historicalData.partners[year]}
-                                                                    onChange={(e) => updateHistoricalData(year, 'partners', e.target.value)}
-                                                                    className="w-20 px-2 py-1 border rounded text-center bg-white"
-                                                                />
-                                                            ) : (
-                                                                <span className="font-medium">{historicalData.partners[year]}</span>
-                                                            )}
-                                                        </td>
-                                                        {['consults', 'videoConsults', 'transfers'].map(metric => (
-                                                            <td key={metric} className="text-center px-3">
-                                                                {editingHistorical ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={historicalData[metric][year]}
-                                                                        onChange={(e) => updateHistoricalData(year, metric, e.target.value)}
-                                                                        className="w-24 px-2 py-1 border rounded text-center bg-white"
-                                                                    />
-                                                                ) : (
-                                                                    <span className="font-medium">{historicalData[metric][year].toLocaleString()}</span>
-                                                                )}
-                                                            </td>
-                                                        ))}
-                                                        <td className="text-center px-3 text-gray-600">
-                                                            {historicalData.consults[year] > 0 
-                                                                ? `${((historicalData.transfers[year] / historicalData.consults[year]) * 100).toFixed(1)}%`
-                                                                : '-'
-                                                            }
-                                                        </td>
-                                                        {editingHistorical && (
-                                                            <td className="text-center">
-                                                                <button
-                                                                    onClick={() => deleteHistoricalYear(year)}
-                                                                    className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100"
-                                                                    aria-label={`Delete year ${year}`}
-                                                                >
-                                                                    <LucideIcon name="Trash2" className="h-4 w-4" />
-                                                                </button>
-                                                            </td>
-                                                        )}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {editingHistorical && (
-                                        <button
-                                            onClick={runSimulation}
-                                            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                                        >
-                                            Update Projections
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Growth Parameters Section */}
-                        <div className="bg-white rounded-lg shadow-md mb-6">
-                            <div 
-                                className="p-6 cursor-pointer flex items-center justify-between"
-                                onClick={() => toggleSection('parameters')}
-                            >
-                                <h2 className="text-lg font-semibold flex items-center text-gray-800">
-                                    <LucideIcon name="Sliders" className="h-5 w-5 mr-2" />
-                                    Growth Scenarios
-                                </h2>
-                                {expandedSections.parameters ? <LucideIcon name="ChevronUp" /> : <LucideIcon name="ChevronDown" />}
-                            </div>
-                            
-                            {expandedSections.parameters && (
-                                <div className="px-6 pb-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        {Object.keys(growthScenarios).map(scenarioKey => (
-                                            <div key={scenarioKey} className={scenarioKey === 'prior' ? "bg-cyan-50 p-4 rounded-lg border border-cyan-200" : "bg-red-50 p-4 rounded-lg border border-red-200"}>
-                                                <h3 className={`font-semibold mb-4 flex items-center ${scenarioKey === 'prior' ? 'text-cyan-900' : 'text-red-900'}`}>
-                                                    <LucideIcon name={scenarioKey === 'prior' ? "TrendingUp" : "BarChart2"} className="h-5 w-5 mr-2" />
-                                                    {scenarioKey === 'prior' ? 'Continued Prior Growth' : 'Conservative'} Scenario
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">New Partner Sites per Year</label>
-                                                        <input type="number" value={growthScenarios[scenarioKey].lambdaNewPartners} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], lambdaNewPartners: parseInt(e.target.value) || 0}}))} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"/>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Additional Consults per Year</label>
-                                                        <div className="flex space-x-2">
-                                                            <input type="number" value={growthScenarios[scenarioKey].meanConsultGrowth} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], meanConsultGrowth: parseInt(e.target.value) || 0}}))} className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Mean"/>
-                                                            <input type="number" value={growthScenarios[scenarioKey].sdConsultGrowth} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], sdConsultGrowth: parseInt(e.target.value) || 0}}))} className="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="SD"/>
-                                                        </div>
-                                                        <p className="text-xs text-gray-500 mt-1">Mean ± Standard Deviation</p>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Transfer Rate</label>
-                                                        <div className="flex space-x-2">
-                                                            <input type="number" value={growthScenarios[scenarioKey].meanTransferRate * 100} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], meanTransferRate: (parseInt(e.target.value) || 0) / 100}}))} className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Mean %"/>
-                                                            <input type="number" value={growthScenarios[scenarioKey].sdTransferRate * 100} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], sdTransferRate: (parseInt(e.target.value) || 0) / 100}}))} className="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="SD %"/>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Video Consult Growth per Year</label>
-                                                        <div className="flex space-x-2">
-                                                          <input type="number" value={growthScenarios[scenarioKey].meanVideoGrowth} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], meanVideoGrowth: parseInt(e.target.value) || 0}}))} className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Mean"/>
-                                                          <input type="number" value={growthScenarios[scenarioKey].sdVideoGrowth} onChange={(e) => setGrowthScenarios(p => ({...p, [scenarioKey]: {...p[scenarioKey], sdVideoGrowth: parseInt(e.target.value) || 0}}))} className="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="SD"/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="mt-6 flex items-center justify-between">
-                                        <label className="flex items-center">
-                                            <input type="checkbox" checked={showConfidenceInterval} onChange={(e) => setShowConfidenceInterval(e.target.checked)} className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"/>
-                                            <span className="text-sm text-gray-700">Show 95% Confidence Intervals</span>
-                                        </label>
-                                        <button
-                                            onClick={runSimulation}
-                                            disabled={isSimulating}
-                                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold"
-                                        >
-                                            {isSimulating ? (
-                                                <>
-                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                    Running...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <LucideIcon name="Activity" className="h-4 w-4 mr-2" />
-                                                    Run Simulation
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Visualization Panels */}
-                        {simResults && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {[{metric: 'consults', title: 'Annual Consults', icon: 'TrendingUp'}, {metric: 'videoConsults', title: 'Video Consults', icon: 'Video'}].map(chart => (
-                                        <div key={chart.metric} className="bg-white rounded-lg shadow-md p-6">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-800">
-                                                <LucideIcon name={chart.icon} className="h-5 w-5 mr-2" />
-                                                {chart.title}
-                                            </h3>
-                                            <ResponsiveContainer width="100%" height={350}>
-                                                <ComposedChart data={prepareChartData(chart.metric)} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                    <XAxis dataKey="year" />
-                                                    <YAxis />
-                                                    <Tooltip formatter={(value) => typeof value === 'number' ? value.toLocaleString(undefined, {maximumFractionDigits: 0}) : value} />
-                                                    
-                                                    {showConfidenceInterval && <>
-                                                        <Area type="monotone" dataKey="conservativeCiLower" stackId="c" stroke="none" fill="none" />
-                                                        <Area type="monotone" dataKey="conservativeCiDiff" name="Conservative 95% CI" stackId="c" stroke="none" fill="#dc2626" fillOpacity={0.2} />
-                                                        <Area type="monotone" dataKey="priorCiLower" stackId="p" stroke="none" fill="none" />
-                                                        <Area type="monotone" dataKey="priorCiDiff" name="Prior Growth 95% CI" stackId="p" stroke="none" fill="#0891b2" fillOpacity={0.2} />
-                                                    </>}
-                                                    
-                                                    <Line type="monotone" dataKey="historical" name="Historical" stroke="#1f2937" strokeWidth={3} dot={{ r: 5, fill: '#1f2937' }} activeDot={{ r: 6 }} connectNulls={false} />
-                                                    <Line type="monotone" dataKey="priorMean" name="Prior Growth Mean" stroke="#0891b2" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#0891b2' }} activeDot={{ r: 6 }} />
-                                                    <Line type="monotone" dataKey="conservativeMean" name="Conservative Mean" stroke="#dc2626" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#dc2626' }} activeDot={{ r: 6 }} />
-                                                    
-                                                    <ReferenceLine x={Math.max(...Object.keys(historicalData.partners).map(Number))} stroke="#9ca3af" strokeDasharray="3 3" />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {[{metric: 'partners', title: 'Partner Sites', icon: 'Users'}, {metric: 'transfers', title: 'Patient Transfers', icon: 'BarChart2'}].map(chart => (
-                                       <div key={chart.metric} className="bg-white rounded-lg shadow-md p-6">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-800">
-                                                <LucideIcon name={chart.icon} className="h-5 w-5 mr-2" />
-                                                {chart.title}
-                                            </h3>
-                                            <ResponsiveContainer width="100%" height={350}>
-                                                <ComposedChart data={prepareChartData(chart.metric)} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                    <XAxis dataKey="year" />
-                                                    <YAxis />
-                                                    <Tooltip formatter={(value) => typeof value === 'number' ? value.toLocaleString(undefined, {maximumFractionDigits: 0}) : value} />
-                                                    
-                                                    {showConfidenceInterval && <>
-                                                        <Area type="monotone" dataKey="conservativeCiLower" stackId="c" stroke="none" fill="none" />
-                                                        <Area type="monotone" dataKey="conservativeCiDiff" name="Conservative 95% CI" stackId="c" stroke="none" fill="#dc2626" fillOpacity={0.2} />
-                                                        <Area type="monotone" dataKey="priorCiLower" stackId="p" stroke="none" fill="none" />
-                                                        <Area type="monotone" dataKey="priorCiDiff" name="Prior Growth 95% CI" stackId="p" stroke="none" fill="#0891b2" fillOpacity={0.2} />
-                                                    </>}
-                                                    
-                                                    <Line type="monotone" dataKey="historical" name="Historical" stroke="#1f2937" strokeWidth={3} dot={{ r: 5, fill: '#1f2937' }} activeDot={{ r: 6 }} connectNulls={false} />
-                                                    <Line type="monotone" dataKey="priorMean" name="Prior Growth Mean" stroke="#0891b2" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#0891b2' }} activeDot={{ r: 6 }} />
-                                                    <Line type="monotone" dataKey="conservativeMean" name="Conservative Mean" stroke="#dc2626" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#dc2626' }} activeDot={{ r: 6 }} />
-                                                    
-                                                    <ReferenceLine x={Math.max(...Object.keys(historicalData.partners).map(Number))} stroke="#9ca3af" strokeDasharray="3 3" />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </main>
-                </div>
-            );
-        }
-
-        // Render the application
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<TelestrokeSimulatorApp />);
-    </script>
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
