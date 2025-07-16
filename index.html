@@ -7,9 +7,8 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/react-is/umd/react-is.production.min.js"></script>
-    <script src="https://unpkg.com/recharts@latest/umd/Recharts.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -31,13 +30,8 @@
         
         // Lucide icons setup
         const LucideIcon = ({ name, ...props }) => {
-            let kebabName = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-            if (kebabName.endsWith('2')) {
-                kebabName = kebabName.slice(0, -1) + '-2';
-            } else if (name === 'Edit2') {
-                kebabName = 'pencil';
-            }
-            return <i data-lucide={kebabName} {...props} />;
+            const Icon = lucide[name];
+            return <i {...props} dangerouslySetInnerHTML={{ __html: Icon }} />;
         };
 
         // Icons components
@@ -102,8 +96,8 @@
                         const newPartners = yearIdx === 0 ? 3 : lambdaNewPartners;
                         partners += newPartners;
 
-                        const meanPerPartner = meanConsultGrowth / Math.max(1, newPartners);
-                        const sdPerPartner = sdConsultGrowth / Math.sqrt(Math.max(1, newPartners));
+                        const meanPerPartner = meanConsultGrowth / Math.max(1, lambdaNewPartners);
+                        const sdPerPartner = sdConsultGrowth / Math.sqrt(Math.max(1, lambdaNewPartners));
                         let growth = 0;
                         for (let i = 0; i < newPartners; i++) {
                             growth += this.normalRandom(meanPerPartner, sdPerPartner);
@@ -230,21 +224,12 @@
                         conservative: conservativeResults
                     });
                     setIsSimulating(false);
-                    lucide.createIcons();
                 }, 100);
             }, [historicalData, growthScenarios, simulator]);
 
             useEffect(() => {
                 runSimulation();
             }, [runSimulation]);
-
-            useEffect(() => {
-                lucide.createIcons();
-            }, []);
-
-            useEffect(() => {
-                lucide.createIcons();
-            }, [expandedSections, editingHistorical, simResults]);
 
             const toggleSection = (section) => {
                 setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
