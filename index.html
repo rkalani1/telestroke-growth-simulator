@@ -8,7 +8,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.js"></script>
-    <script src="https://unpkg.com/lucide-react@0.263.0/dist/umd/lucide-react.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -29,9 +29,14 @@
         const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart, ReferenceLine } = Recharts;
         
         // Lucide icons setup
-        const LucideIcon = ({ name, ...props }) => {
-            const Icon = lucide[name];
-            return <Icon {...props} />;
+        const LucideIcon = ({ name, ...props } ) => {
+            let kebabName = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+            if (kebabName.endsWith('2')) {
+                kebabName = kebabName.slice(0, -1) + '-2';
+            } else if (name === 'Edit2') {
+                kebabName = 'pencil';
+            }
+            return <i data-lucide={kebabName} {...props} />;
         };
 
         // Icons components
@@ -230,6 +235,10 @@
             useEffect(() => {
                 runSimulation();
             }, [runSimulation]);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, []);
 
             const toggleSection = (section) => {
                 setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
