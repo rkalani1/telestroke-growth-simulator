@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telestroke Growth Scenario Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 0;
+        }
+        .header p {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #15803d;
+        }
+        .btn-success:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            font-weight: 600;
+            color: #374151;
+            background: #f9fafb;
+        }
+        td input {
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+        .chart-container {
+            width: 100%;
+            height: 320px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .stat-box {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .stat-box.primary {
+            background: #dbeafe;
+        }
+        .stat-box.danger {
+            background: #fee2e2;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .stat-range {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        .spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .parameter-section {
+            background: #f3f4f6;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .parameter-section.primary {
+            background: #e0f2fe;
+        }
+        .parameter-section.danger {
+            background: #fee2e2;
+        }
+        .parameter-group {
+            margin-bottom: 1rem;
+        }
+        .parameter-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+        .parameter-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .input-group input {
+            flex: 1;
+        }
+        .input-group span {
+            color: #6b7280;
+        }
+        .edit-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .public-notice {
+            margin-bottom: 1.5rem;
+            border: 1px solid #f59e0b;
+            background: #fffbeb;
+            color: #92400e;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 0.92rem;
+        }
+        @media (max-width: 768px) {
+            .chart-grid, .grid-4, .parameters-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Telestroke Growth Scenario Demo</h1>
+                    <p>Synthetic Monte Carlo model for public demonstration</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="exportBtn" class="btn btn-success" disabled>Export Data</button>
+                    <button id="reportBtn" class="btn btn-primary" disabled>Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="public-notice">
+            Public demo only. Baseline values are synthetic placeholders, not any organization telestroke volumes,
+            partner counts, transfer counts, or operational forecasts. Do not use this page for internal planning,
+            contracting, staffing, patient-care operations, or public statements without approved institutional review.
+        </div>
+
+        <!-- Synthetic Baseline Data -->
+        <div class="card">
+            <h2>Synthetic Baseline Data</h2>
+            <div class="edit-controls">
+                <button id="editBtn" class="btn btn-primary">Edit Data</button>
+                <button id="saveBtn" class="btn btn-success" style="display: none;">Save Changes</button>
+                <button id="cancelBtn" class="btn btn-secondary" style="display: none;">Cancel</button>
+                <button id="addYearBtn" class="btn btn-primary" style="display: none;">Add Year</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th class="text-center">Example Sites</th>
+                            <th class="text-center">Total Consults</th>
+                            <th class="text-center">Video Consults</th>
+                            <th class="text-center">Transfers</th>
+                            <th class="text-center">Transfer Rate</th>
+                            <th id="deleteHeader" style="display: none;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="historicalTable">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Growth Parameters -->
+        <div class="card">
+            <h2>Growth Scenarios</h2>
+            <div class="parameters-grid">
+                <div class="parameter-section primary">
+                    <h3>Continued Prior Growth</h3>
+                    <div class="parameter-group">
+                        <label>New Example Sites per Year</label>
+                        <input type="number" id="prior-partners" value="2" min="0" max="10">
+                    </div>
+                    <div class="parameter-group">
+                        <label>Additional Consults per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="prior-consults-mean" value="100" min="0">
+                            <input type="number" id="prior-consults-sd" value="25" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Transfer Rate (% ± %)</label>
+                        <div class="input-group">
+                            <input type="number" id="prior-transfer-mean" value="20" min="0" max="100" style="width: 80px;">
+                            <span>±</span>
+                            <input type="number" id="prior-transfer-sd" value="5" min="0" max="50" style="width: 60px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Video Consult Growth per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="prior-video-mean" value="15" min="0">
+                            <input type="number" id="prior-video-sd" value="5" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="parameter-section danger">
+                    <h3>Conservative Growth</h3>
+                    <div class="parameter-group">
+                        <label>New Example Sites per Year</label>
+                        <input type="number" id="cons-partners" value="1" min="0" max="10">
+                    </div>
+                    <div class="parameter-group">
+                        <label>Additional Consults per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="cons-consults-mean" value="50" min="0">
+                            <input type="number" id="cons-consults-sd" value="15" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Transfer Rate (% ± %)</label>
+                        <div class="input-group">
+                            <input type="number" id="cons-transfer-mean" value="15" min="0" max="100" style="width: 80px;">
+                            <span>±</span>
+                            <input type="number" id="cons-transfer-sd" value="5" min="0" max="50" style="width: 60px;">
+                        </div>
+                    </div>
+                    <div class="parameter-group">
+                        <label>Video Consult Growth per Year (Mean ± SD)</label>
+                        <div class="input-group">
+                            <input type="number" id="cons-video-mean" value="8" min="0">
+                            <input type="number" id="cons-video-sd" value="3" min="0" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button id="runSimBtn" class="btn btn-primary">Run Simulation (1000 iterations)</button>
+            </div>
+        </div>
+
+        <!-- Charts Container -->
+        <div id="chartsWrapper" style="display: none;">
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>Annual Consults</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-consults" width="500" height="320"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Example Sites</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-partners" width="500" height="320"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Patient Transfers</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-transfers" width="500" height="320"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Video Consults</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-videoConsults" width="500" height="320"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div id="summaryContainer" class="card" style="display: none;">
+            <h2>2030 Projections Summary</h2>
+            <div class="grid-4" id="summaryGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        const state = {
+            historicalData: {
+                partners: { 2019: 3, 2020: 4, 2021: 5, 2022: 6, 2023: 7, 2024: 8 },
+                consults: { 2019: 320, 2020: 360, 2021: 410, 2022: 470, 2023: 540, 2024: 610 },
+                transfers: { 2019: 62, 2020: 71, 2021: 78, 2022: 89, 2023: 103, 2024: 117 },
+                videoConsults: { 2019: 44, 2020: 51, 2021: 62, 2022: 74, 2023: 83, 2024: 95 }
+            },
+            tempHistoricalData: null,
+            editMode: false,
+            simResults: null,
+            projectionYears: [2025, 2026, 2027, 2028, 2029, 2030]
+        };
+
+        // Monte Carlo Simulation Functions
+        function normalRandom(mean, sd) {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return mean + sd * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        function runSimulation() {
+            const btn = document.getElementById('runSimBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Running Simulation...';
+
+            // Get parameters
+            const params = {
+                prior: {
+                    lambdaNewPartners: parseInt(document.getElementById('prior-partners').value),
+                    meanConsultGrowth: parseInt(document.getElementById('prior-consults-mean').value),
+                    sdConsultGrowth: parseInt(document.getElementById('prior-consults-sd').value),
+                    meanTransferRate: parseInt(document.getElementById('prior-transfer-mean').value) / 100,
+                    sdTransferRate: parseInt(document.getElementById('prior-transfer-sd').value) / 100,
+                    meanVideoGrowth: parseInt(document.getElementById('prior-video-mean').value),
+                    sdVideoGrowth: parseInt(document.getElementById('prior-video-sd').value)
+                },
+                conservative: {
+                    lambdaNewPartners: parseInt(document.getElementById('cons-partners').value),
+                    meanConsultGrowth: parseInt(document.getElementById('cons-consults-mean').value),
+                    sdConsultGrowth: parseInt(document.getElementById('cons-consults-sd').value),
+                    meanTransferRate: parseInt(document.getElementById('cons-transfer-mean').value) / 100,
+                    sdTransferRate: parseInt(document.getElementById('cons-transfer-sd').value) / 100,
+                    meanVideoGrowth: parseInt(document.getElementById('cons-video-mean').value),
+                    sdVideoGrowth: parseInt(document.getElementById('cons-video-sd').value)
+                }
+            };
+
+            setTimeout(() => {
+                state.simResults = {
+                    prior: simulate(params.prior),
+                    conservative: simulate(params.conservative)
+                };
+
+                // Update UI
+                updateCharts();
+                updateSummary();
+                document.getElementById('chartsWrapper').style.display = 'block';
+                document.getElementById('summaryContainer').style.display = 'block';
+                document.getElementById('exportBtn').disabled = false;
+                document.getElementById('reportBtn').disabled = false;
+
+                btn.disabled = false;
+                btn.innerHTML = 'Run Simulation (1000 iterations)';
+            }, 100);
+        }
+
+        function simulate(params) {
+            const numSimulations = 1000;
+            const results = {
+                partners: [],
+                consults: [],
+                transfers: [],
+                videoConsults: []
+            };
+
+            const years = Object.keys(state.historicalData.partners).sort();
+            const lastYear = years[years.length - 1];
+            const currentPartners = state.historicalData.partners[lastYear];
+            const currentConsults = state.historicalData.consults[lastYear];
+            const currentVideoConsults = state.historicalData.videoConsults[lastYear];
+
+            // Run simulations
+            for (let sim = 0; sim < numSimulations; sim++) {
+                let partners = currentPartners;
+                let consults = currentConsults;
+                let videoConsults = currentVideoConsults;
+                
+                const simData = {
+                    partners: [],
+                    consults: [],
+                    transfers: [],
+                    videoConsults: []
+                };
+
+                for (let yearIdx = 0; yearIdx < state.projectionYears.length; yearIdx++) {
+                    const newPartners = yearIdx === 0 ? 3 : params.lambdaNewPartners;
+                    partners += newPartners;
+
+                    const meanPerPartner = params.meanConsultGrowth / Math.max(1, params.lambdaNewPartners);
+                    const sdPerPartner = params.sdConsultGrowth / Math.sqrt(Math.max(1, params.lambdaNewPartners));
+                    let growth = 0;
+                    for (let i = 0; i < newPartners; i++) {
+                        growth += normalRandom(meanPerPartner, sdPerPartner);
+                    }
+                    consults += growth;
+
+                    videoConsults += normalRandom(params.meanVideoGrowth, params.sdVideoGrowth);
+
+                    let transferRate = normalRandom(params.meanTransferRate, params.sdTransferRate);
+                    transferRate = Math.max(0, Math.min(1, transferRate));
+                    const transfers = Math.round(consults * transferRate);
+
+                    simData.partners.push(partners);
+                    simData.consults.push(consults);
+                    simData.transfers.push(transfers);
+                    simData.videoConsults.push(Math.max(0, Math.round(videoConsults)));
+                }
+
+                results.partners.push(simData.partners);
+                results.consults.push(simData.consults);
+                results.transfers.push(simData.transfers);
+                results.videoConsults.push(simData.videoConsults);
+            }
+
+            // Calculate summary statistics
+            const summary = {
+                partners: [],
+                consults: [],
+                transfers: [],
+                videoConsults: []
+            };
+
+            for (let yearIdx = 0; yearIdx < state.projectionYears.length; yearIdx++) {
+                ['partners', 'consults', 'transfers', 'videoConsults'].forEach(metric => {
+                    const values = results[metric].map(sim => sim[yearIdx]).sort((a, b) => a - b);
+                    summary[metric].push({
+                        year: state.projectionYears[yearIdx],
+                        mean: values.reduce((a, b) => a + b, 0) / values.length,
+                        ciLower: values[Math.floor(values.length * 0.025)],
+                        ciUpper: values[Math.floor(values.length * 0.975)]
+                    });
+                });
+            }
+
+            return summary;
+        }
+
+        // Chart drawing using Canvas
+        function drawChart(metric) {
+            const canvas = document.getElementById(`chart-${metric}`);
+            const ctx = canvas.getContext('2d');
+            const width = 500;
+            const height = 320;
+            const margin = { top: 20, right: 50, bottom: 70, left: 70 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Prepare data
+            const data = [];
+            Object.keys(state.historicalData[metric]).sort().forEach(year => {
+                data.push({
+                    year: parseInt(year),
+                    historical: state.historicalData[metric][year]
+                });
+            });
+            
+            state.simResults.prior[metric].forEach((point, idx) => {
+                const conservativePoint = state.simResults.conservative[metric][idx];
+                data.push({
+                    year: point.year,
+                    priorMean: point.mean,
+                    conservativeMean: conservativePoint.mean
+                });
+            });
+
+            // Calculate scales
+            const allValues = [];
+            data.forEach(d => {
+                if (d.historical !== undefined) allValues.push(d.historical);
+                if (d.priorMean !== undefined) allValues.push(d.priorMean);
+                if (d.conservativeMean !== undefined) allValues.push(d.conservativeMean);
+            });
+            
+            const yMin = Math.min(...allValues) * 0.9;
+            const yMax = Math.max(...allValues) * 1.1;
+            const xMin = Math.min(...data.map(d => d.year));
+            const xMax = Math.max(...data.map(d => d.year));
+
+            const xScale = (year) => margin.left + ((year - xMin) / (xMax - xMin)) * innerWidth;
+            const yScale = (value) => margin.top + innerHeight - ((value - yMin) / (yMax - yMin)) * innerHeight;
+
+            // Draw axes
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+
+            // Y-axis
+            ctx.beginPath();
+            ctx.moveTo(margin.left, margin.top);
+            ctx.lineTo(margin.left, margin.top + innerHeight);
+            ctx.stroke();
+
+            // X-axis
+            ctx.beginPath();
+            ctx.moveTo(margin.left, margin.top + innerHeight);
+            ctx.lineTo(margin.left + innerWidth, margin.top + innerHeight);
+            ctx.stroke();
+
+            // Grid lines and labels
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = '#6b7280';
+            ctx.textAlign = 'right';
+
+            for (let i = 0; i <= 5; i++) {
+                const y = margin.top + (innerHeight * i / 5);
+                const value = yMax - (yMax - yMin) * i / 5;
+                
+                // Grid line
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.beginPath();
+                ctx.moveTo(margin.left, y);
+                ctx.lineTo(margin.left + innerWidth, y);
+                ctx.stroke();
+                
+                // Label
+                ctx.fillText(Math.round(value), margin.left - 15, y + 5);
+            }
+
+            // X labels
+            ctx.textAlign = 'center';
+            data.filter((d, i) => i % 2 === 0).forEach(d => {
+                ctx.fillText(d.year, xScale(d.year), margin.top + innerHeight + 25);
+            });
+
+            // Draw lines
+            // Synthetic baseline line
+            ctx.strokeStyle = '#1f2937';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            data.filter(d => d.historical !== undefined).forEach((d, i) => {
+                if (i === 0) ctx.moveTo(xScale(d.year), yScale(d.historical));
+                else ctx.lineTo(xScale(d.year), yScale(d.historical));
+            });
+            ctx.stroke();
+
+            // Prior projection
+            ctx.strokeStyle = '#0891b2';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            data.filter(d => d.priorMean !== undefined).forEach((d, i) => {
+                if (i === 0) ctx.moveTo(xScale(d.year), yScale(d.priorMean));
+                else ctx.lineTo(xScale(d.year), yScale(d.priorMean));
+            });
+            ctx.stroke();
+
+            // Conservative projection
+            ctx.strokeStyle = '#dc2626';
+            ctx.beginPath();
+            data.filter(d => d.conservativeMean !== undefined).forEach((d, i) => {
+                if (i === 0) ctx.moveTo(xScale(d.year), yScale(d.conservativeMean));
+                else ctx.lineTo(xScale(d.year), yScale(d.conservativeMean));
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 2024 reference line
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(xScale(2024), margin.top);
+            ctx.lineTo(xScale(2024), margin.top + innerHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Legend (positioned at bottom)
+            const legendX = margin.left + (innerWidth / 2) - 100;
+            const legendY = margin.top + innerHeight + 35;
+            
+            // Legend items
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'left';
+            
+            // Synthetic baseline
+            ctx.strokeStyle = '#1f2937';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(legendX, legendY);
+            ctx.lineTo(legendX + 20, legendY);
+            ctx.stroke();
+            ctx.fillStyle = '#374151';
+            ctx.fillText('Synthetic baseline', legendX + 25, legendY + 4);
+
+            // Prior
+            ctx.strokeStyle = '#0891b2';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(legendX + 90, legendY);
+            ctx.lineTo(legendX + 110, legendY);
+            ctx.stroke();
+            ctx.fillText('Prior Growth', legendX + 115, legendY + 4);
+
+            // Conservative
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(legendX + 210, legendY);
+            ctx.lineTo(legendX + 230, legendY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillText('Conservative', legendX + 235, legendY + 4);
+        }
+
+        // UI Update Functions
+        function populateHistoricalTable() {
+            const tbody = document.getElementById('historicalTable');
+            const years = Object.keys(state.historicalData.partners).sort();
+            
+            tbody.innerHTML = years.map(year => {
+                if (state.editMode) {
+                    return `
+                        <tr>
+                            <td>${year}</td>
+                            <td class="text-center">
+                                <input type="number" id="partners-${year}" value="${state.historicalData.partners[year]}" min="0">
+                            </td>
+                            <td class="text-center">
+                                <input type="number" id="consults-${year}" value="${state.historicalData.consults[year]}" min="0">
+                            </td>
+                            <td class="text-center">
+                                <input type="number" id="videoConsults-${year}" value="${state.historicalData.videoConsults[year]}" min="0">
+                            </td>
+                            <td class="text-center">
+                                <input type="number" id="transfers-${year}" value="${state.historicalData.transfers[year]}" min="0">
+                            </td>
+                            <td class="text-center">${((state.historicalData.transfers[year] / state.historicalData.consults[year]) * 100).toFixed(1)}%</td>
+                            <td class="text-center">
+                                <button onclick="deleteYear(${year})" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    return `
+                        <tr>
+                            <td>${year}</td>
+                            <td class="text-center">${state.historicalData.partners[year]}</td>
+                            <td class="text-center">${state.historicalData.consults[year].toLocaleString()}</td>
+                            <td class="text-center">${state.historicalData.videoConsults[year]}</td>
+                            <td class="text-center">${state.historicalData.transfers[year]}</td>
+                            <td class="text-center">${((state.historicalData.transfers[year] / state.historicalData.consults[year]) * 100).toFixed(1)}%</td>
+                        </tr>
+                    `;
+                }
+            }).join('');
+        }
+
+        function updateCharts() {
+            ['consults', 'partners', 'transfers', 'videoConsults'].forEach(metric => {
+                drawChart(metric);
+            });
+        }
+
+        function updateSummary() {
+            const grid = document.getElementById('summaryGrid');
+            const metrics = [
+                { key: 'consults', label: 'Annual Consults' },
+                { key: 'partners', label: 'Example Sites' },
+                { key: 'transfers', label: 'Patient Transfers' },
+                { key: 'videoConsults', label: 'Video Consults' }
+            ];
+
+            grid.innerHTML = metrics.map(({ key, label }) => {
+                const prior = state.simResults.prior[key][5];
+                const cons = state.simResults.conservative[key][5];
+                
+                return `
+                    <div>
+                        <h3>${label}</h3>
+                        <div class="stat-box primary">
+                            <div class="stat-label">Continued Prior Growth</div>
+                            <div class="stat-value">${Math.round(prior.mean).toLocaleString()}</div>
+                            <div class="stat-range">
+                                95% CI: ${Math.round(prior.ciLower).toLocaleString()} - ${Math.round(prior.ciUpper).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="stat-box danger">
+                            <div class="stat-label">Conservative</div>
+                            <div class="stat-value">${Math.round(cons.mean).toLocaleString()}</div>
+                            <div class="stat-range">
+                                95% CI: ${Math.round(cons.ciLower).toLocaleString()} - ${Math.round(cons.ciUpper).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Edit mode functions
+        function enterEditMode() {
+            state.editMode = true;
+            state.tempHistoricalData = JSON.parse(JSON.stringify(state.historicalData));
+            
+            document.getElementById('editBtn').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'inline-flex';
+            document.getElementById('cancelBtn').style.display = 'inline-flex';
+            document.getElementById('addYearBtn').style.display = 'inline-flex';
+            document.getElementById('deleteHeader').style.display = 'table-cell';
+            
+            populateHistoricalTable();
+        }
+
+        function exitEditMode(save = false) {
+            if (save) {
+                // Save changes
+                const years = Object.keys(state.historicalData.partners).sort();
+                const newData = {
+                    partners: {},
+                    consults: {},
+                    transfers: {},
+                    videoConsults: {}
+                };
+                
+                years.forEach(year => {
+                    newData.partners[year] = parseInt(document.getElementById(`partners-${year}`).value) || 0;
+                    newData.consults[year] = parseInt(document.getElementById(`consults-${year}`).value) || 0;
+                    newData.videoConsults[year] = parseInt(document.getElementById(`videoConsults-${year}`).value) || 0;
+                    newData.transfers[year] = parseInt(document.getElementById(`transfers-${year}`).value) || 0;
+                });
+                
+                state.historicalData = newData;
+            } else {
+                // Cancel changes
+                if (state.tempHistoricalData) {
+                    state.historicalData = state.tempHistoricalData;
+                }
+            }
+            
+            state.editMode = false;
+            state.tempHistoricalData = null;
+            
+            document.getElementById('editBtn').style.display = 'inline-flex';
+            document.getElementById('saveBtn').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('addYearBtn').style.display = 'none';
+            document.getElementById('deleteHeader').style.display = 'none';
+            
+            populateHistoricalTable();
+            
+            if (save && state.simResults) {
+                runSimulation();
+            }
+        }
+
+        function addYear() {
+            const years = Object.keys(state.historicalData.partners).map(Number).sort();
+            const newYear = Math.max(...years) + 1;
+            
+            state.historicalData.partners[newYear] = 0;
+            state.historicalData.consults[newYear] = 0;
+            state.historicalData.transfers[newYear] = 0;
+            state.historicalData.videoConsults[newYear] = 0;
+            
+            populateHistoricalTable();
+        }
+
+        function deleteYear(year) {
+            delete state.historicalData.partners[year];
+            delete state.historicalData.consults[year];
+            delete state.historicalData.transfers[year];
+            delete state.historicalData.videoConsults[year];
+            
+            populateHistoricalTable();
+        }
+
+        function exportCSV() {
+            if (!state.simResults) return;
+
+            let csvContent = "Year,Metric,Scenario,Mean,CI_Lower,CI_Upper\n";
+            
+            ['partners', 'consults', 'transfers', 'videoConsults'].forEach(metric => {
+                Object.keys(state.historicalData[metric]).forEach(year => {
+                    csvContent += `${year},${metric},synthetic_baseline,${state.historicalData[metric][year]},,\n`;
+                });
+                
+                ['prior', 'conservative'].forEach(scenario => {
+                    state.simResults[scenario][metric].forEach(point => {
+                        csvContent += `${point.year},${metric},${scenario},${point.mean.toFixed(0)},${point.ciLower.toFixed(0)},${point.ciUpper.toFixed(0)}\n`;
+                    });
+                });
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'synthetic_telestroke_demo_projections.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generateReport() {
+            if (!state.simResults) return;
+            
+            let report = `SYNTHETIC TELESTROKE GROWTH SCENARIO DEMO\n`;
+            report += `${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+            report += `${'='.repeat(80)}\n\n`;
+            report += `Public-demo notice: baseline values are synthetic placeholders and are not real operational data or an approved forecast. Do not use for internal planning, contracting, staffing, patient-care operations, or public statements without approved institutional review.\n\n`;
+            
+            const lastIdx = state.simResults.prior.consults.length - 1;
+            const years = Object.keys(state.historicalData.consults).sort();
+            const lastYear = years[years.length - 1];
+            const currentConsults = state.historicalData.consults[lastYear];
+            const projectedPrior = state.simResults.prior.consults[lastIdx].mean;
+            const projectedCons = state.simResults.conservative.consults[lastIdx].mean;
+            
+            report += `Synthetic Annual Consults (${lastYear}): ${currentConsults.toLocaleString()}\n\n`;
+            report += `Projected 2030 Consults:\n`;
+            report += `• Continued Prior Growth: ${Math.round(projectedPrior).toLocaleString()} (${((projectedPrior/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
+            report += `  95% CI: ${Math.round(state.simResults.prior.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(state.simResults.prior.consults[lastIdx].ciUpper).toLocaleString()}\n\n`;
+            report += `• Conservative: ${Math.round(projectedCons).toLocaleString()} (${((projectedCons/currentConsults - 1) * 100).toFixed(1)}% growth)\n`;
+            report += `  95% CI: ${Math.round(state.simResults.conservative.consults[lastIdx].ciLower).toLocaleString()} - ${Math.round(state.simResults.conservative.consults[lastIdx].ciUpper).toLocaleString()}\n`;
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Synthetic_Telestroke_Demo_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            populateHistoricalTable();
+            
+            // Event listeners
+            document.getElementById('runSimBtn').addEventListener('click', runSimulation);
+            document.getElementById('exportBtn').addEventListener('click', exportCSV);
+            document.getElementById('reportBtn').addEventListener('click', generateReport);
+            document.getElementById('editBtn').addEventListener('click', enterEditMode);
+            document.getElementById('saveBtn').addEventListener('click', () => exitEditMode(true));
+            document.getElementById('cancelBtn').addEventListener('click', () => exitEditMode(false));
+            document.getElementById('addYearBtn').addEventListener('click', addYear);
+            
+            // Run initial simulation
+            runSimulation();
+        });
+
+        // Make deleteYear globally accessible
+        window.deleteYear = deleteYear;
+    </script></body>
+</html>
